@@ -124,6 +124,43 @@
     scrollbar-width: none;  /* Firefox */
 }
 
+        /* ביטול הנקודות הרגילות */
+        ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        /* עיצוב השורה */
+        li {
+            padding: 15px 0;
+            border-bottom: 1px solid #334155;
+            display: flex;
+            align-items: flex-start; /* יישור למעלה במקרה של טקסט ארוך */
+            text-align: right;
+        }
+
+        /* הוספת המגן דוד לפני כל שורה */
+        li::before {
+            content: "✡"; /* תו מגן דוד */
+            color: var(--accent-color); /* צבע זהב */
+            font-size: 0.8em;
+            margin-left: 15px; /* רווח בין המגן דוד לטקסט */
+            margin-top: 5px; /* תיקון קטן ליישור */
+            flex-shrink: 0; /* שלא יתכווץ */
+        }
+
+        /* עיצוב לתמונות (נוסיף את זה בקוד JS תכף) */
+        .slide-image {
+            max-width: 100%;
+            max-height: 50vh; /* שלא יתפוס את כל המסך */
+            border-radius: 10px;
+            margin: 10px auto;
+            display: block;
+            border: 3px solid var(--accent-color);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+        }
+
         @keyframes fadeIn {
             from { opacity: 0; transform: scale(0.95); }
             to { opacity: 1; transform: scale(1); }
@@ -244,18 +281,24 @@
                         if (currentSlide.items.length > 0 || currentSlide.title !== "הודעות הקהילה") {
                             slidesContent.push(currentSlide);
                         }
-                        // איפוס לשקופית חדשה
                         currentSlide = { title: "", items: [] };
-                        isNextLineTitle = true; // סימון שהשורה הבאה היא כותרת
+                        isNextLineTitle = true;
                     } 
                     else if (isNextLineTitle) {
-                        // זו הכותרת החדשה
                         currentSlide.title = text;
                         isNextLineTitle = false;
                     } 
                     else {
-                        // זה סתם תוכן רגיל
-                        currentSlide.items.push(text);
+                        // --- התיקון החדש כאן: זיהוי תמונה ---
+                        if (text.startsWith('IMG:')) {
+                            // מנקים את הקידומת ומקבלים רק את ה-URL
+                            const imgUrl = text.replace('IMG:', '').trim();
+                            // דוחפים אובייקט מיוחד שמסמן שזו תמונה
+                            currentSlide.items.push({ type: 'image', value: imgUrl });
+                        } else {
+                            // טקסט רגיל
+                            currentSlide.items.push({ type: 'text', value: text });
+                        }
                     }
                 });
 
@@ -270,11 +313,19 @@
                     div.className = 'slide dynamic-slide';
                     
                     let html = `<h1>${slide.title}</h1><div class="content-box"><ul>`;
-                    slide.items.forEach(item => {
-                        html += `<li style="display:block; text-align:right;">• ${item}</li>`;
-                    });
-                    html += `</ul></div>`;
                     
+                    slide.items.forEach(item => {
+                        // בדיקה: האם זה טקסט או תמונה?
+                        if (item.type === 'image') {
+                            // תמונה לא מקבלת <li> עם מגן דוד, אלא מוצגת נקייה
+                            html += `<img src="${item.value}" class="slide-image" alt="תמונה">`;
+                        } else {
+                            // טקסט מקבל <li> (שעכשיו יש לו מגן דוד ב-CSS)
+                            html += `<li>${item.value}</li>`;
+                        }
+                    });
+                    
+                    html += `</ul></div>`;
                     div.innerHTML = html;
                     frame.insertBefore(div, document.getElementById('progress'));
                 });
