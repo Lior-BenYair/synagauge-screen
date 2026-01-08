@@ -199,24 +199,21 @@
         return data.slice(1); // החזרת המידע ללא שורת הכותרת
     }
 
-    // פונקציה לבניית השקופיות הדינמיות
     async function buildDynamicSlides() {
         const frame = document.getElementById('main-frame');
         
-        // 1. מחיקת שקופיות דינמיות ישנות (משאירים רק את שקופית 0 שהיא שבת)
+        // 1. מחיקת שקופיות דינמיות ישנות
         const existingDynamic = document.querySelectorAll('.dynamic-slide');
         existingDynamic.forEach(el => el.remove());
 
-        // 2. הבאת נתונים
+        // 2. הבאת נתונים - קוראים בתורה (ללא שינוי)
         try {
-            // --- קוראים ---
             const readersData = await fetchCSV(READERS_CSV_URL);
             if (readersData.length > 0) {
                 const div = document.createElement('div');
-                div.className = 'slide dynamic-slide'; // מחלקה מזהה
+                div.className = 'slide dynamic-slide'; 
                 let html = `<h1>קוראים בתורה</h1><div class="content-box"><ul>`;
                 readersData.forEach(row => {
-                    // שינוי: הורדנו את ה-replace כי fetchCSV כבר מטפל בזה
                     const role = row[0] || ''; 
                     const name = row[1] || '';
                     html += `<li><span class="role">${role}</span><span>${name}</span></li>`;
@@ -225,24 +222,66 @@
                 div.innerHTML = html;
                 frame.insertBefore(div, document.getElementById('progress'));
             }
+        } catch (e) { console.error("Error fetching Readers:", e); }
 
-            // --- הודעות ---
+        // 3. הבאת נתונים - הודעות מרובות דפים (השינוי הגדול)
+        try {
             const newsData = await fetchCSV(NEWS_CSV_URL);
+            
             if (newsData.length > 0) {
-                const div = document.createElement('div');
-                div.className = 'slide dynamic-slide';
-                let html = `<h1>הודעות הקהילה</h1><div class="content-box"><ul>`;
-                newsData.forEach(row => {
-                    const msg = row[0] || '';
-                    html += `<li style="display:block; text-align:right;">• ${msg}</li>`;
+                let slidesContent = []; // מערך שיחזיק אובייקטים של שקופיות
+                let currentSlide = { title: "הודעות הקהילה", items: [] }; // ברירת מחדל
+                let isNextLineTitle = false; // דגל לזיהוי כותרת
+
+                newsData.forEach((row, index) => {
+                    const text = row[0] ? row[0].trim() : '';
+                    
+                    if (!text) return; // דילוג על שורות ריקות
+
+                    // בדיקה האם זו שורת הפרדה
+                    if (text.includes('*****')) {
+                        // אם צברנו מידע בשקופית הקודמת, נשמור אותה
+                        if (currentSlide.items.length > 0 || currentSlide.title !== "הודעות הקהילה") {
+                            slidesContent.push(currentSlide);
+                        }
+                        // איפוס לשקופית חדשה
+                        currentSlide = { title: "", items: [] };
+                        isNextLineTitle = true; // סימון שהשורה הבאה היא כותרת
+                    } 
+                    else if (isNextLineTitle) {
+                        // זו הכותרת החדשה
+                        currentSlide.title = text;
+                        isNextLineTitle = false;
+                    } 
+                    else {
+                        // זה סתם תוכן רגיל
+                        currentSlide.items.push(text);
+                    }
                 });
-                html += `</ul></div>`;
-                div.innerHTML = html;
-                frame.insertBefore(div, document.getElementById('progress'));
+
+                // הוספת השקופית האחרונה שנשארה ביד (אחרי שהלולאה נגמרה)
+                if (currentSlide.items.length > 0) {
+                    slidesContent.push(currentSlide);
+                }
+
+                // --- שלב הרינדור (יצירת ה-HTML) ---
+                slidesContent.forEach(slide => {
+                    const div = document.createElement('div');
+                    div.className = 'slide dynamic-slide';
+                    
+                    let html = `<h1>${slide.title}</h1><div class="content-box"><ul>`;
+                    slide.items.forEach(item => {
+                        html += `<li style="display:block; text-align:right;">• ${item}</li>`;
+                    });
+                    html += `</ul></div>`;
+                    
+                    div.innerHTML = html;
+                    frame.insertBefore(div, document.getElementById('progress'));
+                });
             }
 
         } catch (e) {
-            console.error("Error fetching CSV:", e);
+            console.error("Error fetching News:", e);
         }
         
         // עדכון רשימת השקופיות בזיכרון
