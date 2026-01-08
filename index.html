@@ -204,6 +204,21 @@
             box-shadow: 0 5px 15px rgba(0,0,0,0.5);
         }
 
+        .logo {
+            position: absolute; /* מאפשר למקם אותו במדויק בתוך המסגרת */
+            top: 30px;          /* מרחק מלמעלה */
+            left: 30px;         /* מרחק מצד שמאל */
+            width: 150px;       /* רוחב הלוגו - תשחק עם המספר הזה לפי הצורך */
+            height: auto;       /* שומר על פרופורציות */
+            z-index: 100;       /* מוודא שהוא תמיד מעל השקופיות */
+            
+            /* אפקט הצללה עדין כדי שיבלוט על הרקע הכהה */
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+            
+            /* אם הלוגו שלך הוא ריבוע לבן, תוסיף את השורה הבאה כדי לעגל פינות: */
+            /* border-radius: 50%; */
+        }
+
         @keyframes fadeIn {
             from { opacity: 0; transform: scale(0.95); }
             to { opacity: 1; transform: scale(1); }
@@ -215,7 +230,7 @@
 <div id="loader">טוען נתונים...</div>
 
 <div class="frame" id="main-frame">
-    
+    <img src="Yachad-Logo.png" class="logo" alt="לוגו">
     <div class="slide" id="slide-shabbat">
         <h1 id="parasha-name">...</h1>
         <h3 id="hebrew-date-display" style="color: #94a3b8; margin-top: -10px; margin-bottom: 20px;">...</h3>
