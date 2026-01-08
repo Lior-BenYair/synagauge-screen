@@ -36,12 +36,14 @@
         }
 
         .slide {
-            display: none; /* הכל מוסתר בהתחלה */
+            display: none;
             text-align: center;
-            width: 85%;
-            height: 80%;
+            width: 90%; /* רחב יותר */
+            height: 92%; /* ניצול מקסימלי של הגובה בתוך המסגרת */
+            
+            /* הגדרות Flexbox כדי למתוח את התוכן */
             flex-direction: column;
-            justify-content: center;
+            justify-content: flex-start; /* מתחיל מלמעלה */
             align-items: center;
             animation: fadeIn 0.8s ease-in-out;
         }
@@ -50,28 +52,35 @@
             display: flex;
         }
 
+        /* 1. שינוי הגדרות הכותרת */
         h1 {
-            font-size: 4.5em;
+            font-size: 2.5em; /* הקטנו מ-4.5em ל-2.5em */
             color: var(--accent-color);
-            margin: 0 0 30px 0;
+            margin: 0 0 10px 0; /* צמצמנו את הרווח התחתון מ-30px ל-10px */
             text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            line-height: 1.2; /* צמצום גובה השורה */
+            flex-shrink: 0; /* מונע מהכותרת להתכווץ */
         }
 
         h2 {
-            font-size: 3em;
-            margin-bottom: 20px;
+            font-size: 1.8em; /* הקטנו מ-3em */
+            margin-bottom: 10px;
             color: #e2e8f0;
+            flex-shrink: 0;
         }
 
         .content-box {
             background-color: rgba(30, 41, 59, 0.9);
-            padding: 40px;
+            padding: 20px; /* הקטנו קצת את הריפוד הפנימי */
             border-radius: 15px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            font-size: 2.2em;
+            font-size: 2.2em; /* אפשר להקטין ל-2em אם עדיין צפוף */
             width: 100%;
-            max-height: 65vh;
-            overflow-y: auto; /* למקרה שיש הרבה תוכן */
+            
+            /* הקסם שמותח את הקופסה */
+            flex-grow: 1; /* תופס את כל הגובה הפנוי שנשאר אחרי הכותרת */
+            overflow-y: auto; /* מאפשר גלילה אם הטקסט ארוך מהמסך */
+            min-height: 0; /* טריק קריטי כדי ש-overflow יעבוד בתוך Flex */
         }
 
         /* עיצוב זמנים */
