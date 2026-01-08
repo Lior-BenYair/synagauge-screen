@@ -249,7 +249,7 @@
         const data = await response.json();
         
         const parasha = data.items.find(i => i.category === "parashat");
-        if(parasha) document.getElementById('parasha-name').innerText = "פרשת " + parasha.hebrew;
+        if(parasha) document.getElementById('parasha-name').innerText = parasha.hebrew;
         
         const candles = data.items.find(i => i.category === "candles");
         if(candles) {
