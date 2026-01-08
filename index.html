@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>מצגת בית כנסת</title>
+    <title>מצגת בית כנסת חכמה</title>
     <style>
         :root {
-            --bg-color: #0f172a; /* כחול עמוק */
-            --text-color: #f1f5f9; /* לבן/אפור בהיר */
-            --accent-color: #fbbf24; /* זהב */
-            --card-bg: #1e293b; /* כחול קצת יותר בהיר */
+            --bg-color: #0f172a;
+            --text-color: #f1f5f9;
+            --accent-color: #fbbf24;
+            --card-bg: #1e293b;
         }
 
         body, html {
@@ -22,9 +22,8 @@
             overflow: hidden;
         }
 
-        /* מסגרת עיצובית */
         .frame {
-            border: 10px solid var(--accent-color);
+            border: 8px solid var(--accent-color);
             height: 96vh;
             margin: 1vh;
             box-sizing: border-box;
@@ -33,87 +32,103 @@
             justify-content: center;
             align-items: center;
             border-radius: 20px;
+            background-image: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
         }
 
-        /* הסתרת כל השקופיות כברירת מחדל */
         .slide {
-            display: none;
+            display: none; /* הכל מוסתר בהתחלה */
             text-align: center;
-            width: 80%;
-            animation: fadeIn 1s ease-in-out;
+            width: 85%;
+            height: 80%;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.8s ease-in-out;
         }
 
-        /* הצגת השקופית הפעילה */
         .slide.active {
-            display: block;
+            display: flex;
         }
 
         h1 {
-            font-size: 5em;
+            font-size: 4.5em;
             color: var(--accent-color);
-            margin-bottom: 20px;
-            text-shadow: 2px 2px 4px #000;
+            margin: 0 0 30px 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
         }
 
         h2 {
             font-size: 3em;
-            margin-bottom: 40px;
-            border-bottom: 2px solid var(--accent-color);
-            display: inline-block;
-            padding-bottom: 10px;
+            margin-bottom: 20px;
+            color: #e2e8f0;
         }
 
         .content-box {
-            background-color: var(--card-bg);
+            background-color: rgba(30, 41, 59, 0.9);
             padding: 40px;
             border-radius: 15px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-            font-size: 2.5em;
-            line-height: 1.6;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            font-size: 2.2em;
+            width: 100%;
+            max-height: 65vh;
+            overflow-y: auto; /* למקרה שיש הרבה תוכן */
         }
 
+        /* עיצוב זמנים */
         .time-row {
             display: flex;
             justify-content: space-between;
             margin: 20px 0;
-            font-weight: bold;
-        }
-
-        ul {
-            list-style-type: none;
-            padding: 0;
-        }
-        
-        li {
-            margin: 15px 0;
-            border-bottom: 1px solid #334155;
+            border-bottom: 1px dashed #475569;
             padding-bottom: 10px;
         }
 
-        /* פס התקדמות למטה */
+        /* עיצוב רשימות */
+        ul { list-style: none; padding: 0; margin: 0; }
+        li {
+            padding: 15px 0;
+            border-bottom: 1px solid #334155;
+            display: flex;
+            justify-content: space-between;
+        }
+        li:last-child { border-bottom: none; }
+        
+        .role { font-weight: bold; color: var(--accent-color); }
+
         .progress-bar {
             position: absolute;
             bottom: 0;
             left: 0;
-            height: 10px;
+            height: 8px;
             background-color: var(--accent-color);
             width: 0%;
-            transition: width 0.1s linear;
+        }
+        
+        /* הודעת טעינה */
+        #loader {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 2em;
+            color: var(--accent-color);
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
         }
     </style>
 </head>
 <body>
 
-<div class="frame">
+<div id="loader">טוען נתונים...</div>
+
+<div class="frame" id="main-frame">
     
-    <div class="slide active" id="slide-shabbat">
-        <h1>שבת שלום</h1>
-        <h2 id="parasha-name">טוען נתונים...</h2>
+    <div class="slide" id="slide-shabbat">
+        <h1>זמני השבת</h1>
+        <h2 id="parasha-name">...</h2>
         <div class="content-box">
             <div class="time-row">
                 <span>כניסת שבת:</span>
@@ -123,140 +138,154 @@
                 <span>יציאת שבת:</span>
                 <span id="havdalah-time" style="color: var(--accent-color)">--:--</span>
             </div>
-            <div style="font-size: 0.6em; margin-top: 20px; opacity: 0.7;">זמנים למודיעין</div>
+            <div style="font-size: 0.6em; margin-top: 30px; opacity: 0.7;">זמנים למודיעין | מתוך Hebcal</div>
         </div>
-    </div>
-
-    <div class="slide" id="slide-readers">
-        <h1>קוראים בתורה</h1>
-        <div class="content-box" style="font-size: 2em;">
-            <ul id="readers-list">
-                </ul>
-        </div>
-    </div>
-
-    <div class="slide" id="slide-news">
-        <h1>הודעות הקהילה</h1>
-        <div class="content-box" id="news-content">
-            </div>
     </div>
 
     <div class="progress-bar" id="progress"></div>
 </div>
 
 <script>
-    // --- הגדרות משתמש (כאן אתה מעדכן את התוכן) ---
+    // ==========================================
+    // הגדרות - הדבק כאן את הקישורים שלך
+    // ==========================================
     
-    // רשימת הקוראים בתורה
-    const readers = [
-        "ראשון: יהונתן חוביץ",
-        "שני: יהונתן חוביץ",
-        "שלישי: יהונתן חוביץ",
-        "רביעי: יהונתן חוביץ",
-        "חמישי: איתן פסקרה",
-        "שישי: איתן פסקרה",
-        "שביעי: איתן פסקרה"
-    ];
+    // 1. קישור ל-CSV של הקוראים (Readers)
+    const READERS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRpQmb6-3vOGGYVVkQWQpHbGr5hp7NwRmDgwAw7b8zwoB5Tk3MJrVZReEet5CfcNSTTUBlIUq2ASOUd/pub?gid=0&single=true&output=csv';
+    
+    // 2. קישור ל-CSV של ההודעות (News)
+    const NEWS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRpQmb6-3vOGGYVVkQWQpHbGr5hp7NwRmDgwAw7b8zwoB5Tk3MJrVZReEet5CfcNSTTUBlIUq2ASOUd/pub?gid=1737085330&single=true&output=csv';
 
-    // הודעות לציבור
-    const announcements = [
-        "ביום שני בשעה 20:00 שיעור גמרא בבית משפחת ארזון",
-        "נא לא לדבר בשעת התפילה",
-        "מזל טוב למשפחת לוי להולדת הבת!"
-    ];
+    // ==========================================
+    
+    const SLIDE_DURATION = 10000; // 10 שניות
+    let slides = []; 
+    let currentSlideIndex = 0;
 
-    const slideDuration = 10000; // זמן לכל שקופית במילי שניות (10 שניות)
-
-    // --- לוגיקה ---
-
-    // 1. מילוי תוכן סטטי
-    const readersListEl = document.getElementById('readers-list');
-    readers.forEach(reader => {
-        const li = document.createElement('li');
-        li.textContent = reader;
-        readersListEl.appendChild(li);
-    });
-
-    const newsContentEl = document.getElementById('news-content');
-    announcements.forEach(msg => {
-        const p = document.createElement('p');
-        p.textContent = "• " + msg;
-        newsContentEl.appendChild(p);
-    });
-
-    // 2. משיכת זמני שבת (API של Hebcal) עבור מודיעין (GeonameID: 294071)
-    async function fetchShabbatTimes() {
+    // פונקציה ראשית לאתחול
+    async function init() {
         try {
-            const response = await fetch('https://www.hebcal.com/shabbat?cfg=json&geonameid=294071&M=on'); 
-            const data = await response.json();
+            // 1. טעינת זמני שבת
+            await loadShabbatTimes();
             
-            // מציאת פרשת השבוע
-            const parashaItem = data.items.find(item => item.category === "parashat");
-            if (parashaItem) {
-                document.getElementById('parasha-name').textContent = "פרשת " + parashaItem.hebrew;
-            }
+            // 2. טעינת נתונים מהגוגל שיטס ויצירת שקופיות
+            await createDynamicSlides();
 
-            // מציאת זמנים
-            const candlesItem = data.items.find(item => item.category === "candles");
-            const havdalahItem = data.items.find(item => item.category === "havdalah");
+            // 3. הסתרת טוען והתחלת מצגת
+            document.getElementById('loader').style.display = 'none';
+            
+            // איסוף כל השקופיות (הקיימות + החדשות)
+            slides = document.querySelectorAll('.slide');
+            
+            // התחלת הלופ
+            showSlide(0);
+            setInterval(nextSlide, SLIDE_DURATION);
 
-            if (candlesItem) {
-                const time = new Date(candlesItem.date).toLocaleTimeString('he-IL', {hour: '2-digit', minute:'2-digit'});
-                document.getElementById('candles-time').textContent = time;
-            }
-            if (havdalahItem) {
-                const time = new Date(havdalahItem.date).toLocaleTimeString('he-IL', {hour: '2-digit', minute:'2-digit'});
-                document.getElementById('havdalah-time').textContent = time;
-            }
-
-        } catch (error) {
-            console.error("Error fetching times:", error);
-            document.getElementById('parasha-name').textContent = "שגיאה בטעינת נתונים";
+        } catch (e) {
+            document.getElementById('loader').innerText = "שגיאה בטעינה: " + e.message;
         }
     }
 
-    // 3. ניהול המצגת
-    let currentSlide = 0;
-    const slides = document.querySelectorAll('.slide');
-    const totalSlides = slides.length;
-    const progressBar = document.getElementById('progress');
+    // פונקציית עזר לקריאת CSV (מפרק שורות ופסיקים)
+    async function fetchCSV(url) {
+        const res = await fetch(url);
+        const text = await res.text();
+        const rows = text.split('\n').map(row => row.split(',')); // פירוק בסיסי
+        // הסרת שורת כותרת וניקוי רווחים
+        return rows.slice(1).filter(r => r.length > 0 && r[0].trim() !== '');
+    }
 
-    function showNextSlide() {
-        // הסתר נוכחי
-        slides[currentSlide].classList.remove('active');
+    async function createDynamicSlides() {
+        const frame = document.getElementById('main-frame');
+
+        // --- יצירת שקופית קוראים ---
+        try {
+            const readersData = await fetchCSV(READERS_CSV_URL);
+            if (readersData.length > 0) {
+                const div = document.createElement('div');
+                div.className = 'slide';
+                let html = `<h1>קוראים בתורה</h1><div class="content-box"><ul>`;
+                
+                readersData.forEach(row => {
+                    // הנחה: עמודה 0 = תפקיד, עמודה 1 = שם
+                    // מנקה מרכאות שאקסל לפעמים מוסיף
+                    const role = row[0].replace(/"/g, ''); 
+                    const name = row[1] ? row[1].replace(/"/g, '') : '';
+                    html += `<li><span class="role">${role}</span><span>${name}</span></li>`;
+                });
+                
+                html += `</ul></div>`;
+                div.innerHTML = html;
+                frame.insertBefore(div, document.getElementById('progress'));
+            }
+        } catch (e) { console.log("No readers data or error"); }
+
+        // --- יצירת שקופית הודעות ---
+        try {
+            const newsData = await fetchCSV(NEWS_CSV_URL);
+            if (newsData.length > 0) {
+                // כאן אפשר להוסיף לוגיקה: אם יש יותר מ-5 הודעות, צור 2 שקופיות
+                const div = document.createElement('div');
+                div.className = 'slide';
+                let html = `<h1>הודעות הקהילה</h1><div class="content-box"><ul>`;
+                
+                newsData.forEach(row => {
+                    const msg = row[0].replace(/"/g, '');
+                    html += `<li style="display:block; text-align:right;">• ${msg}</li>`;
+                });
+                
+                html += `</ul></div>`;
+                div.innerHTML = html;
+                frame.insertBefore(div, document.getElementById('progress'));
+            }
+        } catch (e) { console.log("No news data"); }
+    }
+
+    async function loadShabbatTimes() {
+        const response = await fetch('https://www.hebcal.com/shabbat?cfg=json&geonameid=294071&M=on'); 
+        const data = await response.json();
         
-        // עבור לבא
-        currentSlide = (currentSlide + 1) % totalSlides;
+        const parasha = data.items.find(i => i.category === "parashat");
+        if(parasha) document.getElementById('parasha-name').innerText = "פרשת " + parasha.hebrew;
         
-        // הצג חדש
-        slides[currentSlide].classList.add('active');
+        const candles = data.items.find(i => i.category === "candles");
+        if(candles) {
+            const d = new Date(candles.date);
+            document.getElementById('candles-time').innerText = d.toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'});
+        }
+
+        const havdalah = data.items.find(i => i.category === "havdalah");
+        if(havdalah) {
+             const d = new Date(havdalah.date);
+            document.getElementById('havdalah-time').innerText = d.toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'});
+        }
+    }
+
+    function showSlide(index) {
+        slides.forEach(s => s.classList.remove('active'));
+        slides[index].classList.add('active');
         
-        // איפוס אנימציית בר
-        progressBar.style.transition = 'none';
-        progressBar.style.width = '0%';
+        // אנימציית בר
+        const bar = document.getElementById('progress');
+        bar.style.transition = 'none';
+        bar.style.width = '0%';
         setTimeout(() => {
-            progressBar.style.transition = `width ${slideDuration}ms linear`;
-            progressBar.style.width = '100%';
+            bar.style.transition = `width ${SLIDE_DURATION}ms linear`;
+            bar.style.width = '100%';
         }, 50);
     }
 
-    // אתחול
-    fetchShabbatTimes();
+    function nextSlide() {
+        currentSlideIndex = (currentSlideIndex + 1) % slides.length;
+        showSlide(currentSlideIndex);
+    }
+
+    // הפעלה
+    init();
     
-    // התחלת אנימציה ראשונית
-    setTimeout(() => {
-        progressBar.style.transition = `width ${slideDuration}ms linear`;
-        progressBar.style.width = '100%';
-    }, 50);
-
-    setInterval(showNextSlide, slideDuration);
-
-    // ריענון הדף פעם ביום כדי לוודא תאריכים עדכניים
-    setTimeout(() => {
-        location.reload();
-    }, 86400000); 
+    // ריענון מלא כל שעה (לעדכון נתונים מהשיטס)
+    setTimeout(() => location.reload(), 3600000); 
 
 </script>
-
 </body>
 </html>
