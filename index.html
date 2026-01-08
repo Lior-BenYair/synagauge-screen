@@ -134,14 +134,14 @@
         }
 
         /* הסתרת פס הגלילה בדפדפני כרום/אנדרואיד */
-.content-box::-webkit-scrollbar {
-    display: none;
-}
-/* הסתרת פס הגלילה בסטנדרט החדש */
-.content-box {
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Firefox */
-}
+        .content-box::-webkit-scrollbar {
+            display: none;
+        }
+        /* הסתרת פס הגלילה בסטנדרט החדש */
+        .content-box {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
 
         /* ביטול הנקודות הרגילות */
         ul {
@@ -214,6 +214,8 @@
             
             /* אפקט הצללה עדין כדי שיבלוט על הרקע הכהה */
             filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+
+            mix-blend-mode: multiply; /* גורם ללבן להפוך לשקוף (עובד רק אם הלוגו שחור-לבן) */
             
             /* אם הלוגו שלך הוא ריבוע לבן, תוסיף את השורה הבאה כדי לעגל פינות: */
             /* border-radius: 50%; */
