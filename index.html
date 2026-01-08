@@ -71,16 +71,18 @@
 
         .content-box {
             background-color: rgba(30, 41, 59, 0.9);
-            padding: 20px; /* הקטנו קצת את הריפוד הפנימי */
+            padding: 20px;
             border-radius: 15px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            font-size: 2.2em; /* אפשר להקטין ל-2em אם עדיין צפוף */
-            width: 100%;
             
-            /* הקסם שמותח את הקופסה */
-            flex-grow: 1; /* תופס את כל הגובה הפנוי שנשאר אחרי הכותרת */
-            overflow-y: auto; /* מאפשר גלילה אם הטקסט ארוך מהמסך */
-            min-height: 0; /* טריק קריטי כדי ש-overflow יעבוד בתוך Flex */
+            /* --- כאן השינוי --- */
+            font-size: 2.8em; /* הגדלנו מ-2.2em. אפשר לשנות ל-3.0em אם צריך עוד */
+            /* ------------------ */
+            
+            width: 100%;
+            flex-grow: 1; 
+            overflow-y: auto; 
+            min-height: 0; 
         }
 
         /* עיצוב זמנים */
