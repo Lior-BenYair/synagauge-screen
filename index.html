@@ -114,6 +114,16 @@
             color: var(--accent-color);
         }
 
+        /* הסתרת פס הגלילה בדפדפני כרום/אנדרואיד */
+.content-box::-webkit-scrollbar {
+    display: none;
+}
+/* הסתרת פס הגלילה בסטנדרט החדש */
+.content-box {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+}
+
         @keyframes fadeIn {
             from { opacity: 0; transform: scale(0.95); }
             to { opacity: 1; transform: scale(1); }
@@ -157,6 +167,8 @@
     const NEWS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRpQmb6-3vOGGYVVkQWQpHbGr5hp7NwRmDgwAw7b8zwoB5Tk3MJrVZReEet5CfcNSTTUBlIUq2ASOUd/pub?gid=1737085330&single=true&output=csv';
 
     // ==========================================
+
+    let scrollInterval = null; // משתנה לשמירת הטיימר של הגלילה
     
     const SLIDE_DURATION = 10000; // 10 שניות
     let slides = []; 
@@ -264,19 +276,57 @@
         }
     }
 
-    function showSlide(index) {
-        slides.forEach(s => s.classList.remove('active'));
-        slides[index].classList.add('active');
+    function startAutoScroll(slideElement) {
+    const box = slideElement.querySelector('.content-box');
+    
+    // איפוס הגלילה למעלה בהתחלה
+    if (box) box.scrollTop = 0;
+    
+    // בדיקה האם בכלל צריך גלילה (האם התוכן ארוך מהגובה)
+    if (box && box.scrollHeight > box.clientHeight) {
         
-        // אנימציית בר
-        const bar = document.getElementById('progress');
-        bar.style.transition = 'none';
-        bar.style.width = '0%';
+        // המתנה של 2 שניות לפני שמתחילים לגלול (כדי שהעין תתפוס את הכותרת)
         setTimeout(() => {
-            bar.style.transition = `width ${SLIDE_DURATION}ms linear`;
-            bar.style.width = '100%';
-        }, 50);
+            // חישוב מהירות: אנחנו רוצים להגיע לסוף קצת לפני שנגמר הזמן של השקופית
+            // נשאיר 3 שניות מרווח ביטחון (2 בהתחלה + 1 בסוף)
+            const distance = box.scrollHeight - box.clientHeight;
+            const timeAvailable = SLIDE_DURATION - 3000; 
+            const speed = distance / (timeAvailable / 20); // פיקסלים לכל 'פעימה'
+            
+            scrollInterval = setInterval(() => {
+                box.scrollTop += 1; // גלילה של פיקסל אחד למטה
+                
+                // בדיקה אם הגענו לסוף
+                if (box.scrollTop + box.clientHeight >= box.scrollHeight) {
+                    clearInterval(scrollInterval);
+                }
+            }, 30); // קצב רענון (ככל שהמספר נמוך יותר, הגלילה חלקה ומהירה יותר)
+        }, 2000);
     }
+}
+
+    function showSlide(index) {
+    // 1. ניקוי גלילה קודמת (חשוב מאוד!)
+    if (scrollInterval) clearInterval(scrollInterval);
+    
+    // הסתרת כל השקופיות
+    slides.forEach(s => s.classList.remove('active'));
+    
+    // הצגת השקופית הנוכחית
+    slides[index].classList.add('active');
+    
+    // 2. הפעלת גלילה אוטומטית לשקופית החדשה
+    startAutoScroll(slides[index]);
+    
+    // אנימציית בר התקדמות (הקוד הישן)
+    const bar = document.getElementById('progress');
+    bar.style.transition = 'none';
+    bar.style.width = '0%';
+    setTimeout(() => {
+        bar.style.transition = `width ${SLIDE_DURATION}ms linear`;
+        bar.style.width = '100%';
+    }, 50);
+}
 
     function nextSlide() {
         currentSlideIndex = (currentSlideIndex + 1) % slides.length;
