@@ -157,187 +157,177 @@
 
 <script>
     // ==========================================
-    // הגדרות - הדבק כאן את הקישורים שלך
+    // הגדרות
     // ==========================================
-    
-    // 1. קישור ל-CSV של הקוראים (Readers)
     const READERS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRpQmb6-3vOGGYVVkQWQpHbGr5hp7NwRmDgwAw7b8zwoB5Tk3MJrVZReEet5CfcNSTTUBlIUq2ASOUd/pub?gid=0&single=true&output=csv';
-    
-    // 2. קישור ל-CSV של ההודעות (News)
     const NEWS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRpQmb6-3vOGGYVVkQWQpHbGr5hp7NwRmDgwAw7b8zwoB5Tk3MJrVZReEet5CfcNSTTUBlIUq2ASOUd/pub?gid=1737085330&single=true&output=csv';
-
+    const SLIDE_DURATION = 10000; 
+    const REFRESH_INTERVAL = 5 * 60 * 1000; // בדיקת עדכונים כל 5 דקות
     // ==========================================
 
-    let scrollInterval = null; // משתנה לשמירת הטיימר של הגלילה
-    
-    const SLIDE_DURATION = 10000; // 10 שניות
     let slides = []; 
     let currentSlideIndex = 0;
+    let scrollInterval = null;
+    let lastFetchTime = 0; // מתי בדקנו פעם אחרונה
 
-    // פונקציה ראשית לאתחול
-    async function init() {
-        try {
-            // 1. טעינת זמני שבת
-            await loadShabbatTimes();
-            
-            // 2. טעינת נתונים מהגוגל שיטס ויצירת שקופיות
-            await createDynamicSlides();
-
-            // 3. הסתרת טוען והתחלת מצגת
-            document.getElementById('loader').style.display = 'none';
-            
-            // איסוף כל השקופיות (הקיימות + החדשות)
-            slides = document.querySelectorAll('.slide');
-            
-            // התחלת הלופ
-            showSlide(0);
-            setInterval(nextSlide, SLIDE_DURATION);
-
-        } catch (e) {
-            document.getElementById('loader').innerText = "שגיאה בטעינה: " + e.message;
-        }
-    }
-
-    // פונקציית עזר לקריאת CSV עם עקיפת Cache
+    // פונקציית עזר למניעת Cache
     async function fetchCSV(url) {
-        // הוספת חותמת זמן כדי למנוע Cache
         const cacheBuster = "&t=" + new Date().getTime(); 
-        
         const res = await fetch(url + cacheBuster);
         const text = await res.text();
         const rows = text.split('\n').map(row => row.split(',')); 
-        
         return rows.slice(1).filter(r => r.length > 0 && r[0].trim() !== '');
     }
 
-    async function createDynamicSlides() {
+    // פונקציה לבניית השקופיות הדינמיות
+    async function buildDynamicSlides() {
         const frame = document.getElementById('main-frame');
+        
+        // 1. מחיקת שקופיות דינמיות ישנות (משאירים רק את שקופית 0 שהיא שבת)
+        const existingDynamic = document.querySelectorAll('.dynamic-slide');
+        existingDynamic.forEach(el => el.remove());
 
-        // --- יצירת שקופית קוראים ---
+        // 2. הבאת נתונים
         try {
+            // --- קוראים ---
             const readersData = await fetchCSV(READERS_CSV_URL);
             if (readersData.length > 0) {
                 const div = document.createElement('div');
-                div.className = 'slide';
+                div.className = 'slide dynamic-slide'; // מחלקה מזהה
                 let html = `<h1>קוראים בתורה</h1><div class="content-box"><ul>`;
-                
                 readersData.forEach(row => {
-                    // הנחה: עמודה 0 = תפקיד, עמודה 1 = שם
-                    // מנקה מרכאות שאקסל לפעמים מוסיף
                     const role = row[0].replace(/"/g, ''); 
                     const name = row[1] ? row[1].replace(/"/g, '') : '';
                     html += `<li><span class="role">${role}</span><span>${name}</span></li>`;
                 });
-                
                 html += `</ul></div>`;
                 div.innerHTML = html;
                 frame.insertBefore(div, document.getElementById('progress'));
             }
-        } catch (e) { console.log("No readers data or error"); }
 
-        // --- יצירת שקופית הודעות ---
-        try {
+            // --- הודעות ---
             const newsData = await fetchCSV(NEWS_CSV_URL);
             if (newsData.length > 0) {
-                // כאן אפשר להוסיף לוגיקה: אם יש יותר מ-5 הודעות, צור 2 שקופיות
                 const div = document.createElement('div');
-                div.className = 'slide';
+                div.className = 'slide dynamic-slide';
                 let html = `<h1>הודעות הקהילה</h1><div class="content-box"><ul>`;
-                
                 newsData.forEach(row => {
                     const msg = row[0].replace(/"/g, '');
                     html += `<li style="display:block; text-align:right;">• ${msg}</li>`;
                 });
-                
                 html += `</ul></div>`;
                 div.innerHTML = html;
                 frame.insertBefore(div, document.getElementById('progress'));
             }
-        } catch (e) { console.log("No news data"); }
+
+        } catch (e) {
+            console.error("Error fetching CSV:", e);
+        }
+        
+        // עדכון רשימת השקופיות בזיכרון
+        slides = document.querySelectorAll('.slide');
     }
 
     async function loadShabbatTimes() {
-        const response = await fetch('https://www.hebcal.com/shabbat?cfg=json&geonameid=294071&M=on'); 
-        const data = await response.json();
-        
-        const parasha = data.items.find(i => i.category === "parashat");
-        if(parasha) document.getElementById('parasha-name').innerText = parasha.hebrew;
-        
-        const candles = data.items.find(i => i.category === "candles");
-        if(candles) {
-            const d = new Date(candles.date);
-            document.getElementById('candles-time').innerText = d.toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'});
-        }
-
-        const havdalah = data.items.find(i => i.category === "havdalah");
-        if(havdalah) {
-             const d = new Date(havdalah.date);
-            document.getElementById('havdalah-time').innerText = d.toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'});
-        }
-    }
-
-    function startAutoScroll(slideElement) {
-    const box = slideElement.querySelector('.content-box');
-    
-    // איפוס הגלילה למעלה בהתחלה
-    if (box) box.scrollTop = 0;
-    
-    // בדיקה האם בכלל צריך גלילה (האם התוכן ארוך מהגובה)
-    if (box && box.scrollHeight > box.clientHeight) {
-        
-        // המתנה של 2 שניות לפני שמתחילים לגלול (כדי שהעין תתפוס את הכותרת)
-        setTimeout(() => {
-            // חישוב מהירות: אנחנו רוצים להגיע לסוף קצת לפני שנגמר הזמן של השקופית
-            // נשאיר 3 שניות מרווח ביטחון (2 בהתחלה + 1 בסוף)
-            const distance = box.scrollHeight - box.clientHeight;
-            const timeAvailable = SLIDE_DURATION - 3000; 
-            const speed = distance / (timeAvailable / 20); // פיקסלים לכל 'פעימה'
+        try {
+            // שימוש ב-Cache buster גם לזמני שבת למקרה של עדכון
+            const response = await fetch('https://www.hebcal.com/shabbat?cfg=json&geonameid=294071&M=on&t=' + new Date().getTime()); 
+            const data = await response.json();
             
-            scrollInterval = setInterval(() => {
-                box.scrollTop += 1; // גלילה של פיקסל אחד למטה
-                
-                // בדיקה אם הגענו לסוף
-                if (box.scrollTop + box.clientHeight >= box.scrollHeight) {
-                    clearInterval(scrollInterval);
-                }
-            }, 30); // קצב רענון (ככל שהמספר נמוך יותר, הגלילה חלקה ומהירה יותר)
-        }, 2000);
-    }
-}
+            const parasha = data.items.find(i => i.category === "parashat");
+            if(parasha) document.getElementById('parasha-name').innerText = "פרשת " + parasha.hebrew;
+            
+            const candles = data.items.find(i => i.category === "candles");
+            if(candles) {
+                const d = new Date(candles.date);
+                document.getElementById('candles-time').innerText = d.toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'});
+            }
 
-    function showSlide(index) {
-    // 1. ניקוי גלילה קודמת (חשוב מאוד!)
-    if (scrollInterval) clearInterval(scrollInterval);
-    
-    // הסתרת כל השקופיות
-    slides.forEach(s => s.classList.remove('active'));
-    
-    // הצגת השקופית הנוכחית
-    slides[index].classList.add('active');
-    
-    // 2. הפעלת גלילה אוטומטית לשקופית החדשה
-    startAutoScroll(slides[index]);
-    
-    // אנימציית בר התקדמות (הקוד הישן)
-    const bar = document.getElementById('progress');
-    bar.style.transition = 'none';
-    bar.style.width = '0%';
-    setTimeout(() => {
-        bar.style.transition = `width ${SLIDE_DURATION}ms linear`;
-        bar.style.width = '100%';
-    }, 50);
-}
+            const havdalah = data.items.find(i => i.category === "havdalah");
+            if(havdalah) {
+                 const d = new Date(havdalah.date);
+                document.getElementById('havdalah-time').innerText = d.toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'});
+            }
+        } catch(e) { console.log("Hebcal error"); }
+    }
+
+    // --- לוגיקת גלילה (מהקוד הקודם) ---
+    function startAutoScroll(slideElement) {
+        const box = slideElement.querySelector('.content-box');
+        if (box) box.scrollTop = 0;
+        
+        if (box && box.scrollHeight > box.clientHeight) {
+            setTimeout(() => {
+                const distance = box.scrollHeight - box.clientHeight;
+                const timeAvailable = SLIDE_DURATION - 3000; 
+                const speed = distance / (timeAvailable / 20); 
+                
+                scrollInterval = setInterval(() => {
+                    box.scrollTop += 1; 
+                    if (box.scrollTop + box.clientHeight >= box.scrollHeight) {
+                        clearInterval(scrollInterval);
+                    }
+                }, 30); 
+            }, 2000);
+        }
+    }
+
+    // --- ניהול המצגת ---
+    async function showSlide(index) {
+        // בדיקה: אם חזרנו להתחלה, האם הגיע הזמן לרענן נתונים?
+        const now = new Date().getTime();
+        if (index === 0 && (now - lastFetchTime > REFRESH_INTERVAL)) {
+            console.log("Refreshing data...");
+            await buildDynamicSlides(); // בנייה מחדש של ה-DOM
+            await loadShabbatTimes();
+            lastFetchTime = now;
+        }
+
+        if (scrollInterval) clearInterval(scrollInterval);
+        
+        // עדכון NodeList למקרה שהשתנה
+        slides = document.querySelectorAll('.slide');
+        
+        // הגנה מפני אינדקס חורג (אם מחקנו שקופיות)
+        if (index >= slides.length) index = 0;
+        currentSlideIndex = index;
+
+        slides.forEach(s => s.classList.remove('active'));
+        slides[currentSlideIndex].classList.add('active');
+        
+        startAutoScroll(slides[currentSlideIndex]);
+        
+        const bar = document.getElementById('progress');
+        bar.style.transition = 'none';
+        bar.style.width = '0%';
+        setTimeout(() => {
+            bar.style.transition = `width ${SLIDE_DURATION}ms linear`;
+            bar.style.width = '100%';
+        }, 50);
+    }
 
     function nextSlide() {
-        currentSlideIndex = (currentSlideIndex + 1) % slides.length;
-        showSlide(currentSlideIndex);
+        // קידום האינדקס
+        let nextIndex = (currentSlideIndex + 1) % slides.length;
+        showSlide(nextIndex);
     }
 
-    // הפעלה
+    // --- אתחול ראשוני ---
+    async function init() {
+        await loadShabbatTimes();
+        await buildDynamicSlides();
+        document.getElementById('loader').style.display = 'none';
+        lastFetchTime = new Date().getTime();
+        
+        slides = document.querySelectorAll('.slide');
+        showSlide(0);
+        setInterval(nextSlide, SLIDE_DURATION);
+    }
+
     init();
     
-    // ריענון מלא כל שעה (לעדכון נתונים מהשיטס)
-    setTimeout(() => location.reload(), 3600000); 
+    // ריענון דף מלא פעם ב-4 שעות ליתר ביטחון (ניקוי זיכרון)
+    setTimeout(() => location.reload(), 14400000); 
 
 </script>
 </body>
