@@ -267,41 +267,86 @@
         const existingDynamic = document.querySelectorAll('.dynamic-slide');
         existingDynamic.forEach(el => el.remove());
 
-        // 2. הבאת נתונים - קוראים בתורה (ללא שינוי)
+        // ============================================================
+        // חלק א': רשימות מובנות (קוראים, בעלי תפקידים, תורמים)
+        // ============================================================
         try {
-            const readersData = await fetchCSV(READERS_CSV_URL);
-            if (readersData.length > 0) {
-                const div = document.createElement('div');
-                div.className = 'slide dynamic-slide'; 
-                let html = `<h1>קוראים בתורה</h1><div class="content-box"><ul>`;
-                readersData.forEach(row => {
-                    const role = row[0] || ''; 
-                    const name = row[1] || '';
-                    html += `<li><span class="role">${role}</span><span>${name}</span></li>`;
-                });
-                html += `</ul></div>`;
-                div.innerHTML = html;
-                frame.insertBefore(div, document.getElementById('progress'));
-            }
-        } catch (e) { console.error("Error fetching Readers:", e); }
+            const listData = await fetchCSV(READERS_CSV_URL);
+            
+            if (listData.length > 0) {
+                let slidesContent = [];
+                // ברירת מחדל: אם אין כותרת בהתחלה, נקרא לזה "רשימה"
+                let currentSlide = { title: "קוראים בתורה", items: [] }; 
+                let isNextLineTitle = false;
 
-        // 3. הבאת נתונים - הודעות מרובות דפים (השינוי הגדול)
+                listData.forEach(row => {
+                    const col1 = row[0] ? row[0].trim() : '';
+                    const col2 = row[1] ? row[1].trim() : '';
+                    
+                    // דילוג על שורות ריקות לגמרי
+                    if (!col1 && !col2) return;
+
+                    // זיהוי דף חדש
+                    if (col1.includes('*****')) {
+                        if (currentSlide.items.length > 0) {
+                            slidesContent.push(currentSlide);
+                        }
+                        currentSlide = { title: "", items: [] };
+                        isNextLineTitle = true;
+                    } 
+                    else if (isNextLineTitle) {
+                        // השורה שאחרי הכוכביות היא הכותרת
+                        currentSlide.title = col1; // הכותרת נמצאת בעמודה הראשונה
+                        isNextLineTitle = false;
+                    } 
+                    else {
+                        // שורה רגילה של מידע (תפקיד + שם)
+                        currentSlide.items.push({ role: col1, name: col2 });
+                    }
+                });
+
+                // הוספת השקופית האחרונה
+                if (currentSlide.items.length > 0) {
+                    slidesContent.push(currentSlide);
+                }
+
+                // יצירת ה-HTML
+                slidesContent.forEach(slide => {
+                    const div = document.createElement('div');
+                    div.className = 'slide dynamic-slide';
+                    
+                    // בניית הרשימה עם ה-CSS של role שכבר בנינו
+                    let html = `<h1>${slide.title}</h1><div class="content-box"><ul>`;
+                    slide.items.forEach(item => {
+                        html += `<li>
+                                    <span class="role">${item.role}</span>
+                                    <span>${item.name}</span>
+                                 </li>`;
+                    });
+                    html += `</ul></div>`;
+                    
+                    div.innerHTML = html;
+                    frame.insertBefore(div, document.getElementById('progress'));
+                });
+            }
+        } catch (e) { console.error("Error fetching Lists:", e); }
+
+        // ============================================================
+        // חלק ב': הודעות וחדשות (טקסט חופשי ותמונות)
+        // ============================================================
         try {
             const newsData = await fetchCSV(NEWS_CSV_URL);
             
             if (newsData.length > 0) {
-                let slidesContent = []; // מערך שיחזיק אובייקטים של שקופיות
-                let currentSlide = { title: "הודעות הקהילה", items: [] }; // ברירת מחדל
-                let isNextLineTitle = false; // דגל לזיהוי כותרת
+                let slidesContent = [];
+                let currentSlide = { title: "הודעות הקהילה", items: [] };
+                let isNextLineTitle = false;
 
-                newsData.forEach((row, index) => {
+                newsData.forEach(row => {
                     const text = row[0] ? row[0].trim() : '';
-                    
-                    if (!text) return; // דילוג על שורות ריקות
+                    if (!text) return;
 
-                    // בדיקה האם זו שורת הפרדה
                     if (text.includes('*****')) {
-                        // אם צברנו מידע בשקופית הקודמת, נשמור אותה
                         if (currentSlide.items.length > 0 || currentSlide.title !== "הודעות הקהילה") {
                             slidesContent.push(currentSlide);
                         }
@@ -313,53 +358,37 @@
                         isNextLineTitle = false;
                     } 
                     else {
-                        // --- התיקון החדש כאן: זיהוי תמונה ---
                         if (text.startsWith('IMG:')) {
-                            // מנקים את הקידומת ומקבלים רק את ה-URL
                             const imgUrl = text.replace('IMG:', '').trim();
-                            // דוחפים אובייקט מיוחד שמסמן שזו תמונה
                             currentSlide.items.push({ type: 'image', value: imgUrl });
                         } else {
-                            // טקסט רגיל
                             currentSlide.items.push({ type: 'text', value: text });
                         }
                     }
                 });
 
-                // הוספת השקופית האחרונה שנשארה ביד (אחרי שהלולאה נגמרה)
                 if (currentSlide.items.length > 0) {
                     slidesContent.push(currentSlide);
                 }
 
-                // --- שלב הרינדור (יצירת ה-HTML) ---
                 slidesContent.forEach(slide => {
                     const div = document.createElement('div');
                     div.className = 'slide dynamic-slide';
-                    
                     let html = `<h1>${slide.title}</h1><div class="content-box"><ul>`;
-                    
                     slide.items.forEach(item => {
-                        // בדיקה: האם זה טקסט או תמונה?
                         if (item.type === 'image') {
-                            // תמונה לא מקבלת <li> עם מגן דוד, אלא מוצגת נקייה
                             html += `<img src="${item.value}" class="slide-image" alt="תמונה">`;
                         } else {
-                            // טקסט מקבל <li> (שעכשיו יש לו מגן דוד ב-CSS)
                             html += `<li>${item.value}</li>`;
                         }
                     });
-                    
                     html += `</ul></div>`;
                     div.innerHTML = html;
                     frame.insertBefore(div, document.getElementById('progress'));
                 });
             }
-
-        } catch (e) {
-            console.error("Error fetching News:", e);
-        }
+        } catch (e) { console.error("Error fetching News:", e); }
         
-        // עדכון רשימת השקופיות בזיכרון
         slides = document.querySelectorAll('.slide');
     }
 
