@@ -170,13 +170,33 @@
     let scrollInterval = null;
     let lastFetchTime = 0; // מתי בדקנו פעם אחרונה
 
-    // פונקציית עזר למניעת Cache
+    // פונקציית עזר לקריאת CSV (גרסה מתוקנת לתמיכה בגרשיים ופסיקים בתוך טקסט)
     async function fetchCSV(url) {
         const cacheBuster = "&t=" + new Date().getTime(); 
         const res = await fetch(url + cacheBuster);
         const text = await res.text();
-        const rows = text.split('\n').map(row => row.split(',')); 
-        return rows.slice(1).filter(r => r.length > 0 && r[0].trim() !== '');
+        
+        // פירוק לשורות
+        const lines = text.split(/\r?\n/).filter(line => line.trim() !== '');
+
+        // פירוק לעמודות עם טיפול חכם בגרשיים
+        const data = lines.map(row => {
+            // הביטוי הרגולרי הזה מפרק לפי פסיקים, אלא אם כן הם בתוך גרשיים
+            const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+            
+            return cols.map(col => {
+                let c = col.trim();
+                // אם הטקסט עטוף בגרשיים - נסיר אותם
+                if (c.startsWith('"') && c.endsWith('"')) {
+                    c = c.slice(1, -1);
+                    // נהפוך גרשיים כפולים ("") לגרשיים רגילים (")
+                    c = c.replace(/""/g, '"');
+                }
+                return c;
+            });
+        });
+
+        return data.slice(1); // החזרת המידע ללא שורת הכותרת
     }
 
     // פונקציה לבניית השקופיות הדינמיות
@@ -196,8 +216,8 @@
                 div.className = 'slide dynamic-slide'; // מחלקה מזהה
                 let html = `<h1>קוראים בתורה</h1><div class="content-box"><ul>`;
                 readersData.forEach(row => {
-                    const role = row[0].replace(/"/g, ''); 
-                    const name = row[1] ? row[1].replace(/"/g, '') : '';
+                    const role = row[0] || ''; 
+                    const name = row[1] ? row[1] || '';
                     html += `<li><span class="role">${role}</span><span>${name}</span></li>`;
                 });
                 html += `</ul></div>`;
@@ -212,7 +232,7 @@
                 div.className = 'slide dynamic-slide';
                 let html = `<h1>הודעות הקהילה</h1><div class="content-box"><ul>`;
                 newsData.forEach(row => {
-                    const msg = row[0].replace(/"/g, '');
+                    const msg = row[0] || '';
                     html += `<li style="display:block; text-align:right;">• ${msg}</li>`;
                 });
                 html += `</ul></div>`;
@@ -235,7 +255,7 @@
             const data = await response.json();
             
             const parasha = data.items.find(i => i.category === "parashat");
-            if(parasha) document.getElementById('parasha-name').innerText = "פרשת " + parasha.hebrew;
+            if(parasha) document.getElementById('parasha-name').innerText = parasha.hebrew;
             
             const candles = data.items.find(i => i.category === "candles");
             if(candles) {
