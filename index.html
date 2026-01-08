@@ -133,40 +133,45 @@
         }
 
         /* עיצוב השורה - התיקון הגדול */
+        /* עיצוב השורה */
         li {
-            padding: 15px 0;
+            padding: 10px 0; /* קצת פחות רווח אנכי כדי שיראה מהודק */
             border-bottom: 1px solid #334155;
             
-            /* הגדרות Flexbox ליישור לימין */
+            /* Flexbox Settings */
             display: flex;
-            flex-direction: row; /* מסדר את הפריטים בשורה */
-            justify-content: flex-start; /* מתחיל את השורה מההתחלה (שבעברית זה ימין!) */
-            align-items: flex-start; /* יישור אנכי לחלק העליון של השורה */
+            flex-direction: row;
+            justify-content: flex-start; /* מתחיל מימין */
+            align-items: center; /* התיקון: מיישר את הכוכב והטקסט לאמצע השורה אנכית */
             
-            /* וידוא כיווניות */
             direction: rtl;
             text-align: right;
             width: 100%;
         }
 
-        /* הוספת המגן דוד לפני כל שורה */
+        /* המגן דוד */
         li::before {
             content: "✡"; 
             color: var(--accent-color); 
-            font-size: 1.2em; /* קצת יותר גדול מהטקסט */
+            font-size: 1.4em; /* השארתי גדול, אבל עכשיו זה ימורכז */
             
-            /* רווחים - ב-RTL margin-left מרחיק את הטקסט שמשמאל לכוכב */
-            margin-left: 15px; 
-            padding-top: 5px; /* יישור עדין מול הטקסט */
+            margin-left: 20px; /* רווח נדיב בין הכוכב לטקסט */
+            line-height: 1; /* מונע רווחים מיותרים בגובה */
             
-            flex-shrink: 0; /* מונע מהכוכב להתכווץ אם הטקסט ארוך */
+            flex-shrink: 0; 
         }
-        
-        /* תיקון קטן לרווח ברשימת הקוראים */
+
+        /* עיצוב העמודה של התפקיד (ראשון, שני...) - התיקון השני */
         .role {
             font-weight: bold;
             color: var(--accent-color);
-            margin-left: 10px; /* רווח בין התפקיד לשם */
+            
+            /* יצירת עמודה קבועה */
+            min-width: 150px; /* רוחב קבוע לתפקיד */
+            display: inline-block;
+            
+            margin-left: 10px; /* מרווח קטן ליתר ביטחון */
+            flex-shrink: 0; /* שלא יתכווץ אם השם ארוך מדי */
         }
 
         /* עיצוב לתמונות (נוסיף את זה בקוד JS תכף) */
