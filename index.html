@@ -221,6 +221,29 @@
              border-radius: 50%; 
         }
 
+        #digital-clock {
+            position: absolute;
+            bottom: 25px; /* קצת מעל פס ההתקדמות */
+            left: 30px;
+            
+            font-size: 2.5em; /* גדול וברור */
+            font-weight: bold;
+            color: var(--text-color); /* לבן */
+            background-color: rgba(15, 23, 42, 0.8); /* רקע חצי שקוף כדי שיבלוט אם טקסט עובר מאחוריו */
+            padding: 5px 15px;
+            border-radius: 10px;
+            
+            /* עיצוב גבול זהוב עדין - אופציונלי */
+            border: 1px solid var(--accent-color);
+            
+            z-index: 100;
+            
+            /* מונע מהשעון "לקפוץ" כשהספרות מתחלפות */
+            font-variant-numeric: tabular-nums; 
+            letter-spacing: 2px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
         @keyframes fadeIn {
             from { opacity: 0; transform: scale(0.95); }
             to { opacity: 1; transform: scale(1); }
@@ -233,6 +256,7 @@
 
 <div class="frame" id="main-frame">
     <img src="Yachad-Logo.png" class="logo" alt="לוגו">
+    <div id="digital-clock">--:--:--</div>
     <div class="slide" id="slide-shabbat">
         <h1 id="parasha-name">...</h1>
         <h3 id="hebrew-date-display" style="color: #94a3b8; margin-top: -10px; margin-bottom: 20px;">...</h3>
@@ -542,6 +566,25 @@
         showSlide(0);
         setInterval(nextSlide, SLIDE_DURATION);
     }
+
+    function updateClock() {
+        const now = new Date();
+        // עיצוב הזמן בפורמט HH:MM:SS
+        const timeString = now.toLocaleTimeString('he-IL', { 
+            hour12: false, 
+            hour: '2-digit', 
+            minute: '2-digit' 
+        });
+        
+        const clockEl = document.getElementById('digital-clock');
+        if (clockEl) clockEl.innerText = timeString;
+    }
+
+    // הפעלה ראשונית
+    updateClock();
+    
+    // עדכון כל שנייה
+    setInterval(updateClock, 1000);
 
     init();
     
