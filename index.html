@@ -129,25 +129,44 @@
             list-style: none;
             padding: 0;
             margin: 0;
+            width: 100%; /* מוודא שהרשימה תופסת את כל הרוחב */
         }
 
-        /* עיצוב השורה */
+        /* עיצוב השורה - התיקון הגדול */
         li {
             padding: 15px 0;
             border-bottom: 1px solid #334155;
+            
+            /* הגדרות Flexbox ליישור לימין */
             display: flex;
-            align-items: flex-start; /* יישור למעלה במקרה של טקסט ארוך */
+            flex-direction: row; /* מסדר את הפריטים בשורה */
+            justify-content: flex-start; /* מתחיל את השורה מההתחלה (שבעברית זה ימין!) */
+            align-items: flex-start; /* יישור אנכי לחלק העליון של השורה */
+            
+            /* וידוא כיווניות */
+            direction: rtl;
             text-align: right;
+            width: 100%;
         }
 
         /* הוספת המגן דוד לפני כל שורה */
         li::before {
-            content: "✡"; /* תו מגן דוד */
-            color: var(--accent-color); /* צבע זהב */
-            font-size: 0.8em;
-            margin-left: 15px; /* רווח בין המגן דוד לטקסט */
-            margin-top: 5px; /* תיקון קטן ליישור */
-            flex-shrink: 0; /* שלא יתכווץ */
+            content: "✡"; 
+            color: var(--accent-color); 
+            font-size: 1.2em; /* קצת יותר גדול מהטקסט */
+            
+            /* רווחים - ב-RTL margin-left מרחיק את הטקסט שמשמאל לכוכב */
+            margin-left: 15px; 
+            padding-top: 5px; /* יישור עדין מול הטקסט */
+            
+            flex-shrink: 0; /* מונע מהכוכב להתכווץ אם הטקסט ארוך */
+        }
+        
+        /* תיקון קטן לרווח ברשימת הקוראים */
+        .role {
+            font-weight: bold;
+            color: var(--accent-color);
+            margin-left: 10px; /* רווח בין התפקיד לשם */
         }
 
         /* עיצוב לתמונות (נוסיף את זה בקוד JS תכף) */
