@@ -186,12 +186,15 @@
         }
     }
 
-    // פונקציית עזר לקריאת CSV (מפרק שורות ופסיקים)
+    // פונקציית עזר לקריאת CSV עם עקיפת Cache
     async function fetchCSV(url) {
-        const res = await fetch(url);
+        // הוספת חותמת זמן כדי למנוע Cache
+        const cacheBuster = "&t=" + new Date().getTime(); 
+        
+        const res = await fetch(url + cacheBuster);
         const text = await res.text();
-        const rows = text.split('\n').map(row => row.split(',')); // פירוק בסיסי
-        // הסרת שורת כותרת וניקוי רווחים
+        const rows = text.split('\n').map(row => row.split(',')); 
+        
         return rows.slice(1).filter(r => r.length > 0 && r[0].trim() !== '');
     }
 
