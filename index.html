@@ -216,8 +216,9 @@
                 div.className = 'slide dynamic-slide'; // מחלקה מזהה
                 let html = `<h1>קוראים בתורה</h1><div class="content-box"><ul>`;
                 readersData.forEach(row => {
+                    // שינוי: הורדנו את ה-replace כי fetchCSV כבר מטפל בזה
                     const role = row[0] || ''; 
-                    const name = row[1] ? row[1] || '';
+                    const name = row[1] || '';
                     html += `<li><span class="role">${role}</span><span>${name}</span></li>`;
                 });
                 html += `</ul></div>`;
