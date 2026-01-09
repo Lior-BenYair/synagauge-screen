@@ -462,7 +462,7 @@
             let shabbatDateISO = ""; // משתנה לשמירת התאריך הלועזי של שבת
 
             if(parashaItem) {
-                document.getElementById('parasha-name').innerText = "פרשת " + parashaItem.hebrew;
+                document.getElementById('parasha-name').innerText = parashaItem.hebrew;
                 // parashaItem.date מחזיר את תאריך השבת בפורמט YYYY-MM-DD
                 shabbatDateISO = parashaItem.date.substring(0, 10);
             }
