@@ -38,12 +38,12 @@
         .slide {
             display: none;
             text-align: center;
-            width: 90%; /* רחב יותר */
-            height: 92%; /* ניצול מקסימלי של הגובה בתוך המסגרת */
+            width: 90%; /* Wider width */
+            height: 92%; /* Maximum height utilization within the frame */
             
-            /* הגדרות Flexbox כדי למתוח את התוכן */
+            /* Flexbox settings to stretch the content */
             flex-direction: column;
-            justify-content: flex-start; /* מתחיל מלמעלה */
+            justify-content: flex-start; /* Starts from the top */
             align-items: center;
             animation: fadeIn 0.8s ease-in-out;
         }
@@ -52,18 +52,18 @@
             display: flex;
         }
 
-        /* 1. שינוי הגדרות הכותרת */
+        /* 1. Title settings change */
         h1 {
-            font-size: 2.5em; /* הקטנו מ-4.5em ל-2.5em */
+            font-size: 2.5em; /* Reduced from 4.5em to 2.5em */
             color: var(--accent-color);
-            margin: 0 0 10px 0; /* צמצמנו את הרווח התחתון מ-30px ל-10px */
+            margin: 0 0 10px 0; /* Reduced bottom margin from 30px to 10px */
             text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
-            line-height: 1.2; /* צמצום גובה השורה */
-            flex-shrink: 0; /* מונע מהכותרת להתכווץ */
+            line-height: 1.2; /* Reduced line height */
+            flex-shrink: 0; /* Prevents the title from shrinking */
         }
 
         h2 {
-            font-size: 1.8em; /* הקטנו מ-3em */
+            font-size: 1.8em; /* Reduced from 3em */
             margin-bottom: 10px;
             color: #e2e8f0;
             flex-shrink: 0;
@@ -71,9 +71,9 @@
 
         h3 {
             font-size: 1.8em;
-            color: #cbd5e1; /* אפור בהיר */
+            color: #cbd5e1; /* Light gray */
             font-weight: normal;
-            margin-top: -15px; /* מקרב אותו לפרשת השבוע */
+            margin-top: -15px; /* Brings it closer to the weekly portion */
             margin-bottom: 25px;
         }
 
@@ -83,8 +83,8 @@
             border-radius: 15px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
             
-            /* --- כאן השינוי --- */
-            font-size: 2.6em; /* הגדלנו מ-2.2em. אפשר לשנות ל-3.0em אם צריך עוד */
+            /* --- Here is the change --- */
+            font-size: 2.6em; /* Increased from 2.2em. Can change to 3.0em if needed more */
             /* ------------------ */
             
             width: 100%;
@@ -93,7 +93,7 @@
             min-height: 0; 
         }
 
-        /* עיצוב זמנים */
+        /* Time styling */
         .time-row {
             display: flex;
             justify-content: space-between;
@@ -102,7 +102,7 @@
             padding-bottom: 10px;
         }
 
-        /* עיצוב רשימות */
+        /* List styling */
         ul { list-style: none; padding: 0; margin: 0; }
         li {
             padding: 15px 0;
@@ -123,7 +123,7 @@
             width: 0%;
         }
         
-        /* הודעת טעינה */
+        /* Loading message */
         #loader {
             position: fixed;
             top: 50%;
@@ -133,70 +133,70 @@
             color: var(--accent-color);
         }
 
-        /* הסתרת פס הגלילה בדפדפני כרום/אנדרואיד */
+        /* Hide scrollbar in Chrome/Android browsers */
         .content-box::-webkit-scrollbar {
             display: none;
         }
-        /* הסתרת פס הגלילה בסטנדרט החדש */
+        /* Hide scrollbar in new standard */
         .content-box {
             -ms-overflow-style: none;  /* IE and Edge */
             scrollbar-width: none;  /* Firefox */
         }
 
-        /* ביטול הנקודות הרגילות */
+        /* Cancel regular bullets */
         ul {
             list-style: none;
             padding: 0;
             margin: 0;
-            width: 100%; /* מוודא שהרשימה תופסת את כל הרוחב */
+            width: 100%; /* Ensures the list takes full width */
         }
 
-        /* עיצוב השורה - התיקון הגדול */
-        /* עיצוב השורה */
+        /* Row styling - The big fix */
+        /* Row styling */
         li {
-            padding: 10px 0; /* קצת פחות רווח אנכי כדי שיראה מהודק */
+            padding: 10px 0; /* A bit less vertical space to look tighter */
             border-bottom: 1px solid #334155;
             
             /* Flexbox Settings */
             display: flex;
             flex-direction: row;
-            justify-content: flex-start; /* מתחיל מימין */
-            align-items: center; /* התיקון: מיישר את הכוכב והטקסט לאמצע השורה אנכית */
+            justify-content: flex-start; /* Starts from the right */
+            align-items: center; /* Fix: Aligns the star and text to the middle of the row vertically */
             
             direction: rtl;
             text-align: right;
             width: 100%;
         }
 
-        /* המגן דוד */
+        /* The Star of David */
         li::before {
             content: "✡"; 
             color: var(--accent-color); 
-            font-size: 1.4em; /* השארתי גדול, אבל עכשיו זה ימורכז */
+            font-size: 1.4em; /* Kept large, but now centered */
             
-            margin-left: 20px; /* רווח נדיב בין הכוכב לטקסט */
-            line-height: 1; /* מונע רווחים מיותרים בגובה */
+            margin-left: 20px; /* Generous space between star and text */
+            line-height: 1; /* Prevents extra spaces in height */
             
             flex-shrink: 0; 
         }
 
-        /* עיצוב העמודה של התפקיד (ראשון, שני...) - התיקון השני */
+        /* Styling for the role column (first, second...) - The second fix */
         .role {
             font-weight: bold;
             color: var(--accent-color);
             
-            /* יצירת עמודה קבועה */
-            min-width: 150px; /* רוחב קבוע לתפקיד */
+            /* Create a fixed column */
+            min-width: 150px; /* Fixed width for role */
             display: inline-block;
             
-            margin-left: 10px; /* מרווח קטן ליתר ביטחון */
-            flex-shrink: 0; /* שלא יתכווץ אם השם ארוך מדי */
+            margin-left: 10px; /* Small margin for extra safety */
+            flex-shrink: 0; /* Won't shrink if name is too long */
         }
 
-        /* עיצוב לתמונות (נוסיף את זה בקוד JS תכף) */
+        /* Styling for images (will add this in JS code soon) */
         .slide-image {
             max-width: 100%;
-            max-height: 50vh; /* שלא יתפוס את כל המסך */
+            max-height: 50vh; /* Won't take the whole screen */
             border-radius: 10px;
             margin: 10px auto;
             display: block;
@@ -205,41 +205,41 @@
         }
 
         .logo {
-            position: absolute; /* מאפשר למקם אותו במדויק בתוך המסגרת */
-            top: 40px;          /* מרחק מלמעלה */
-            right: 20px;         /* מרחק מצד שמאל */
-            width:100px;       /* רוחב הלוגו - תשחק עם המספר הזה לפי הצורך */
-            height: auto;       /* שומר על פרופורציות */
-            z-index: 100;       /* מוודא שהוא תמיד מעל השקופיות */
+            position: absolute; /* Allows precise placement within the frame */
+            top: 40px;          /* Distance from top */
+            right: 20px;         /* Distance from left side */
+            width:100px;       /* Logo width - play with this number as needed */
+            height: auto;       /* Keeps proportions */
+            z-index: 100;       /* Ensures it's always above slides */
             
-            /* אפקט הצללה עדין כדי שיבלוט על הרקע הכהה */
+            /* Subtle shadow effect to stand out on dark background */
             filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
 
-            /*mix-blend-mode: multiply; /* גורם ללבן להפוך לשקוף (עובד רק אם הלוגו שחור-לבן) */
+            /*mix-blend-mode: multiply; /* Makes white transparent (only works if logo is black-white) */
             
-            /* אם הלוגו שלך הוא ריבוע לבן, תוסיף את השורה הבאה כדי לעגל פינות: */
+            /* If your logo is a white square, add the next line to round corners: */
             border-radius: 50%; 
             transform: translate(-50%, -50%);
         }
 
         #digital-clock {
             position: absolute;
-            top: 15px; /* קצת מעל פס ההתקדמות */
+            top: 15px; /* A bit above the progress bar */
             left: 60px;
             
-            font-size: 2.2em; /* גדול וברור */
+            font-size: 2.2em; /* Large and clear */
             font-weight: bold;
-            color: var(--text-color); /* לבן */
-            background-color: rgba(15, 23, 42, 0.8); /* רקע חצי שקוף כדי שיבלוט אם טקסט עובר מאחוריו */
+            color: var(--text-color); /* White */
+            background-color: rgba(15, 23, 42, 0.8); /* Semi-transparent background to stand out if text passes behind */
             padding: 3px 10px;
             border-radius: 10px;
             
-            /* עיצוב גבול זהוב עדין - אופציונלי */
+            /* Optional golden border styling */
             border: 1px solid var(--accent-color);
             
             z-index: 100;
             
-            /* מונע מהשעון "לקפוץ" כשהספרות מתחלפות */
+            /* Prevents the clock from "jumping" when digits change */
             font-variant-numeric: tabular-nums; 
             letter-spacing: 2px;
             text-shadow: 0 2px 4px rgba(0,0,0,0.5);
@@ -247,11 +247,11 @@
 
         #special-day-text {
             font-size: 1.6em;
-            color: var(--accent-color); /* זהוב */
+            color: var(--accent-color); /* Golden */
             margin-top: -15px;
             margin-bottom: 20px;
             font-weight: bold;
-            min-height: 1.6em; /* שומר מקום גם אם אין טקסט, כדי שהעיצוב לא יקפוץ */
+            min-height: 1.6em; /* Reserves space even if no text, so design doesn't jump */
         }
 
         @keyframes fadeIn {
