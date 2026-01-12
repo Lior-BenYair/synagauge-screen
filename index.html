@@ -166,6 +166,8 @@
             direction: rtl;
             text-align: right;
             width: 100%;
+
+            white-space: pre-wrap; /* מכבד ירידות שורה מה-CSV */
         }
 
         /* The Star of David */
@@ -300,32 +302,63 @@
     let lastFetchTime = 0; // מתי בדקנו פעם אחרונה
 
     // פונקציית עזר לקריאת CSV (גרסה מתוקנת לתמיכה בגרשיים ופסיקים בתוך טקסט)
+    // פונקציית CSV משודרגת - תומכת ב-Multiline ובפסיקים בתוך טקסט
     async function fetchCSV(url) {
         const cacheBuster = "&t=" + new Date().getTime(); 
         const res = await fetch(url + cacheBuster);
         const text = await res.text();
         
-        // פירוק לשורות
-        const lines = text.split(/\r?\n/).filter(line => line.trim() !== '');
+        const rows = [];
+        let currentRow = [];
+        let currentCell = '';
+        let insideQuotes = false;
 
-        // פירוק לעמודות עם טיפול חכם בגרשיים
-        const data = lines.map(row => {
-            // הביטוי הרגולרי הזה מפרק לפי פסיקים, אלא אם כן הם בתוך גרשיים
-            const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-            
-            return cols.map(col => {
-                let c = col.trim();
-                // אם הטקסט עטוף בגרשיים - נסיר אותם
-                if (c.startsWith('"') && c.endsWith('"')) {
-                    c = c.slice(1, -1);
-                    // נהפוך גרשיים כפולים ("") לגרשיים רגילים (")
-                    c = c.replace(/""/g, '"');
+        for (let i = 0; i < text.length; i++) {
+            const char = text[i];
+            const nextChar = text[i + 1];
+
+            // 1. טיפול בגרשיים
+            if (char === '"') {
+                if (insideQuotes && nextChar === '"') {
+                    // אם יש פעמיים גרשיים ("") זה אומר גרשיים בתוך הטקסט
+                    currentCell += '"';
+                    i++; // מדלגים על התו הבא
+                } else {
+                    // אחרת - זה מסמן פתיחה או סגירה של טקסט מוגן
+                    insideQuotes = !insideQuotes;
                 }
-                return c;
-            });
-        });
+            }
+            // 2. טיפול בפסיק (מעבר עמודה) - רק אם אנחנו לא בתוך גרשיים
+            else if (char === ',' && !insideQuotes) {
+                currentRow.push(currentCell);
+                currentCell = '';
+            }
+            // 3. טיפול בירידת שורה (סוף רשומה) - רק אם אנחנו לא בתוך גרשיים
+            else if ((char === '\r' || char === '\n') && !insideQuotes) {
+                // התעלמות מ-\n שבא מיד אחרי \r (במערכות Windows)
+                if (char === '\r' && nextChar === '\n') i++;
 
-        return data.slice(1); // החזרת המידע ללא שורת הכותרת
+                // הוספת השורה למערך (רק אם היא לא ריקה לגמרי)
+                if (currentRow.length > 0 || currentCell) {
+                    currentRow.push(currentCell);
+                    rows.push(currentRow);
+                }
+                currentRow = [];
+                currentCell = '';
+            }
+            // 4. סתם תו רגיל
+            else {
+                currentCell += char;
+            }
+        }
+
+        // הוספת השורה האחרונה אם נשאר משהו בזיכרון
+        if (currentRow.length > 0 || currentCell) {
+            currentRow.push(currentCell);
+            rows.push(currentRow);
+        }
+
+        return rows.slice(1); // דילוג על הכותרות
     }
 
     async function buildDynamicSlides() {
