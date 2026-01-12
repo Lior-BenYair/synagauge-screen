@@ -5,263 +5,237 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>מצגת בית כנסת חכמה</title>
     <style>
-        :root {
-            --bg-color: #0f172a;
-            --text-color: #f1f5f9;
-            --accent-color: #fbbf24;
-            --card-bg: #1e293b;
-        }
+    :root {
+        --bg-color: #0f172a;
+        --text-color: #f1f5f9;
+        --accent-color: #fbbf24;
+        --card-bg: #1e293b;
+    }
 
-        body, html {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            overflow: hidden;
-        }
+    body, html {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        overflow: hidden;
+    }
 
-        .frame {
-            border: 8px solid var(--accent-color);
-            height: 96vh;
-            margin: 1vh;
-            box-sizing: border-box;
-            position: relative;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            border-radius: 20px;
-            background-image: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-        }
+    /* --- מסגרת ראשית --- */
+    .frame {
+        border: 8px solid var(--accent-color);
+        height: 96vh;
+        margin: 1vh;
+        box-sizing: border-box;
+        position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border-radius: 20px;
+        background-image: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    }
 
-        .slide {
-            display: none;
-            text-align: center;
-            width: 90%; /* Wider width */
-            height: 92%; /* Maximum height utilization within the frame */
-            
-            /* Flexbox settings to stretch the content */
-            flex-direction: column;
-            justify-content: flex-start; /* Starts from the top */
-            align-items: center;
-            animation: fadeIn 0.8s ease-in-out;
-        }
+    /* --- שקופיות --- */
+    .slide {
+        display: none;
+        text-align: center;
+        width: 90%;
+        height: 92%;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: center;
+        animation: fadeIn 0.8s ease-in-out;
+    }
 
-        .slide.active {
-            display: flex;
-        }
+    .slide.active {
+        display: flex;
+    }
 
-        /* 1. Title settings change */
-        h1 {
-            font-size: 2.5em; /* Reduced from 4.5em to 2.5em */
-            color: var(--accent-color);
-            margin: 0 0 10px 0; /* Reduced bottom margin from 30px to 10px */
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
-            line-height: 1.2; /* Reduced line height */
-            flex-shrink: 0; /* Prevents the title from shrinking */
-        }
+    /* --- כותרות --- */
+    h1 {
+        font-size: 2.5em;
+        color: var(--accent-color);
+        margin: 0 0 10px 0;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+        line-height: 1.2;
+        flex-shrink: 0;
+    }
 
-        h2 {
-            font-size: 1.8em; /* Reduced from 3em */
-            margin-bottom: 10px;
-            color: #e2e8f0;
-            flex-shrink: 0;
-        }
+    h2 {
+        font-size: 1.8em;
+        margin-bottom: 10px;
+        color: #e2e8f0;
+        flex-shrink: 0;
+    }
 
-        h3 {
-            font-size: 1.8em;
-            color: #cbd5e1; /* Light gray */
-            font-weight: normal;
-            margin-top: -15px; /* Brings it closer to the weekly portion */
-            margin-bottom: 25px;
-        }
+    h3 {
+        font-size: 1.8em;
+        color: #cbd5e1;
+        font-weight: normal;
+        margin-top: -15px;
+        margin-bottom: 25px;
+    }
 
-        .content-box {
-            background-color: rgba(30, 41, 59, 0.9);
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            
-            /* --- Here is the change --- */
-            font-size: 2.6em; /* Increased from 2.2em. Can change to 3.0em if needed more */
-            /* ------------------ */
-            
-            width: 100%;
-            flex-grow: 1; 
-            overflow-y: auto; 
-            min-height: 0; 
-        }
+    h4#special-day-text {
+        font-size: 1.6em;
+        color: var(--accent-color);
+        margin-top: -15px;
+        margin-bottom: 20px;
+        font-weight: bold;
+        min-height: 1.6em;
+    }
 
-        /* Time styling */
-        .time-row {
-            display: flex;
-            justify-content: space-between;
-            margin: 20px 0;
-            border-bottom: 1px dashed #475569;
-            padding-bottom: 10px;
-        }
-
-        /* List styling */
-        ul { list-style: none; padding: 0; margin: 0; }
-        li {
-            padding: 15px 0;
-            border-bottom: 1px solid #334155;
-            display: flex;
-            justify-content: space-between;
-        }
-        li:last-child { border-bottom: none; }
+    /* --- תיבת התוכן (איחוד של כל ההגדרות) --- */
+    .content-box {
+        background-color: rgba(30, 41, 59, 0.9);
+        padding: 20px;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         
-        .role { font-weight: bold; color: var(--accent-color); }
-
-        .progress-bar {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            height: 8px;
-            background-color: var(--accent-color);
-            width: 0%;
-        }
+        font-size: 2.6em; /* גודל פונט מעודכן */
         
-        /* Loading message */
-        #loader {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 2em;
-            color: var(--accent-color);
-        }
+        width: 100%;
+        flex-grow: 1; 
+        overflow-y: auto; 
+        min-height: 0;
+        
+        /* הסתרת פס גלילה */
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+        scroll-behavior: auto;
+    }
+    
+    .content-box::-webkit-scrollbar {
+        display: none;
+    }
 
-        /* Hide scrollbar in Chrome/Android browsers */
-        .content-box::-webkit-scrollbar {
-            display: none;
-        }
-        /* Hide scrollbar in new standard */
-        .content-box {
-            -ms-overflow-style: none;  /* IE and Edge */
-            scrollbar-width: none;  /* Firefox */
-            scroll-behavior: auto; /* מוודא שהגלילה של JS היא מיידית ולא מתנגשת עם אנימציות של הדפדפן */
-        }
+    /* --- רשימות ושורות (החלק החשוב) --- */
+    ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        width: 100%;
+    }
 
-        /* Cancel regular bullets */
-        ul {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            width: 100%; /* Ensures the list takes full width */
-        }
+    li {
+        padding: 10px 0;
+        border-bottom: 1px solid #334155;
+        
+        /* סידור האלמנטים בשורה */
+        display: flex;
+        flex-direction: row;
+        justify-content: flex-start;
+        
+        /* תמיכה בהודעות ארוכות - מגן דוד מוצמד למעלה */
+        align-items: flex-start; 
+        
+        direction: rtl;
+        text-align: right;
+        width: 100%;
+        white-space: pre-wrap; /* שומר על ירידות שורה */
+    }
 
-        /* Row styling - The big fix */
-        /* Row styling */
-        li {
-            padding: 10px 0; /* A bit less vertical space to look tighter */
-            border-bottom: 1px solid #334155;
-            
-            /* Flexbox Settings */
-            display: flex;
-            flex-direction: row;
-            justify-content: flex-start; /* Starts from the right */
-            align-items: center; /* Fix: Aligns the star and text to the middle of the row vertically */
-            
-            direction: rtl;
-            text-align: right;
-            width: 100%;
+    li:last-child { 
+        border-bottom: none; 
+    }
 
-            white-space: pre-wrap; /* מכבד ירידות שורה מה-CSV */
-        }
+    /* עיצוב המגן דוד */
+    li::before {
+        content: "✡"; 
+        color: var(--accent-color); 
+        font-size: 1.4em;
+        
+        margin-left: 20px;
+        line-height: 1;
+        
+        /* תיקון מיקום בגלל ההצמדה למעלה */
+        margin-top: 0.1em; 
+        flex-shrink: 0; 
+    }
 
-        /* The Star of David */
-        li::before {
-            content: "✡"; 
-            color: var(--accent-color); 
-            font-size: 1.4em; /* Kept large, but now centered */
-            
-            margin-left: 20px; /* Generous space between star and text */
-            line-height: 1; /* Prevents extra spaces in height */
-            
-            flex-shrink: 0; 
-        }
+    /* עמודת התפקיד (שלישי, מפטיר וכו') */
+    .role {
+        font-weight: bold;
+        color: var(--accent-color);
+        min-width: 150px;
+        display: inline-block;
+        margin-left: 10px;
+        flex-shrink: 0;
+    }
 
-        /* Styling for the role column (first, second...) - The second fix */
-        .role {
-            font-weight: bold;
-            color: var(--accent-color);
-            
-            /* Create a fixed column */
-            min-width: 150px; /* Fixed width for role */
-            display: inline-block;
-            
-            margin-left: 10px; /* Small margin for extra safety */
-            flex-shrink: 0; /* Won't shrink if name is too long */
-        }
+    /* --- אלמנטים נוספים --- */
+    .time-row {
+        display: flex;
+        justify-content: space-between;
+        margin: 20px 0;
+        border-bottom: 1px dashed #475569;
+        padding-bottom: 10px;
+    }
 
-        /* Styling for images (will add this in JS code soon) */
-        .slide-image {
-            max-width: 100%;
-            max-height: 50vh; /* Won't take the whole screen */
-            border-radius: 10px;
-            margin: 10px auto;
-            display: block;
-            border: 3px solid var(--accent-color);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-        }
+    .slide-image {
+        max-width: 100%;
+        max-height: 50vh;
+        border-radius: 10px;
+        margin: 10px auto;
+        display: block;
+        border: 3px solid var(--accent-color);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+    }
 
-        .logo {
-            position: absolute; /* Allows precise placement within the frame */
-            top: 40px;          /* Distance from top */
-            right: 20px;         /* Distance from left side */
-            width:100px;       /* Logo width - play with this number as needed */
-            height: auto;       /* Keeps proportions */
-            z-index: 100;       /* Ensures it's always above slides */
-            
-            /* Subtle shadow effect to stand out on dark background */
-            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+    /* --- לוגו ושעון --- */
+    .logo {
+        position: absolute;
+        top: 40px;
+        right: 20px; /* שים לב: בקוד שלך זה היה בצד ימין, השארתי את זה כך */
+        width: 100px;
+        height: auto;
+        z-index: 100;
+        filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+        border-radius: 50%; 
+        transform: translate(-50%, -50%); /* אופציונלי: ייתכן שתרצה למחוק את זה אם הלוגו בורח החוצה */
+    }
 
-            /*mix-blend-mode: multiply; /* Makes white transparent (only works if logo is black-white) */
-            
-            /* If your logo is a white square, add the next line to round corners: */
-            border-radius: 50%; 
-            transform: translate(-50%, -50%);
-        }
+    #digital-clock {
+        position: absolute;
+        top: 15px;
+        left: 60px;
+        font-size: 2.2em;
+        font-weight: bold;
+        color: var(--text-color);
+        background-color: rgba(15, 23, 42, 0.8);
+        padding: 3px 10px;
+        border-radius: 10px;
+        border: 1px solid var(--accent-color);
+        z-index: 100;
+        font-variant-numeric: tabular-nums; 
+        letter-spacing: 2px;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    }
 
-        #digital-clock {
-            position: absolute;
-            top: 15px; /* A bit above the progress bar */
-            left: 60px;
-            
-            font-size: 2.2em; /* Large and clear */
-            font-weight: bold;
-            color: var(--text-color); /* White */
-            background-color: rgba(15, 23, 42, 0.8); /* Semi-transparent background to stand out if text passes behind */
-            padding: 3px 10px;
-            border-radius: 10px;
-            
-            /* Optional golden border styling */
-            border: 1px solid var(--accent-color);
-            
-            z-index: 100;
-            
-            /* Prevents the clock from "jumping" when digits change */
-            font-variant-numeric: tabular-nums; 
-            letter-spacing: 2px;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-        }
+    .progress-bar {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        height: 8px;
+        background-color: var(--accent-color);
+        width: 0%;
+    }
+    
+    #loader {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 2em;
+        color: var(--accent-color);
+    }
 
-        #special-day-text {
-            font-size: 1.6em;
-            color: var(--accent-color); /* Golden */
-            margin-top: -15px;
-            margin-bottom: 20px;
-            font-weight: bold;
-            min-height: 1.6em; /* Reserves space even if no text, so design doesn't jump */
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: scale(0.95); }
-            to { opacity: 1; transform: scale(1); }
-        }
-    </style>
+    @keyframes fadeIn {
+        from { opacity: 0; transform: scale(0.95); }
+        to { opacity: 1; transform: scale(1); }
+    }
+</style>
 </head>
 <body>
 
