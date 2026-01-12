@@ -651,22 +651,6 @@
     // ריענון דף מלא פעם ב-4 שעות ליתר ביטחון (ניקוי זיכרון)
     setTimeout(() => location.reload(), 14400000); 
 
-</script>
-<div style="position: fixed; top: 0; left: 0; background: red; color: white; font-size: 30px; z-index: 9999; padding: 20px; text-align: left; direction: ltr;">
-    Screen: <span id="debug-screen"></span><br>
-    Viewport: <span id="debug-viewport"></span><br>
-    DPR: <span id="debug-dpr"></span>
-</div>
-
-<script>
-    function updateDebugInfo() {
-        document.getElementById('debug-screen').innerText = window.screen.width + " x " + window.screen.height;
-        document.getElementById('debug-viewport').innerText = window.innerWidth + " x " + window.innerHeight;
-        document.getElementById('debug-dpr').innerText = window.devicePixelRatio;
-    }
-    updateDebugInfo();
-    window.addEventListener('resize', updateDebugInfo);
-</script>
-    
+</script>    
 </body>
 </html>
