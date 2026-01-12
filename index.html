@@ -141,6 +141,7 @@
         .content-box {
             -ms-overflow-style: none;  /* IE and Edge */
             scrollbar-width: none;  /* Firefox */
+            scroll-behavior: auto; /* מוודא שהגלילה של JS היא מיידית ולא מתנגשת עם אנימציות של הדפדפן */
         }
 
         /* Cancel regular bullets */
@@ -300,6 +301,7 @@
     let currentSlideIndex = 0;
     let scrollInterval = null;
     let lastFetchTime = 0; // מתי בדקנו פעם אחרונה
+    let slideTimer = null;
 
     // פונקציית עזר לקריאת CSV (גרסה מתוקנת לתמיכה בגרשיים ופסיקים בתוך טקסט)
     // פונקציית CSV משודרגת - תומכת ב-Multiline ובפסיקים בתוך טקסט
@@ -364,98 +366,98 @@
     async function buildDynamicSlides() {
         const frame = document.getElementById('main-frame');
         
-        // 1. מחיקת שקופיות דינמיות ישנות
+        // מחיקת שקופיות ישנות
         const existingDynamic = document.querySelectorAll('.dynamic-slide');
         existingDynamic.forEach(el => el.remove());
 
         // ============================================================
-        // חלק א': רשימות מובנות (קוראים, בעלי תפקידים, תורמים)
+        // חלק א': רשימות מובנות (קוראים, בעלי תפקידים)
         // ============================================================
         try {
             const listData = await fetchCSV(READERS_CSV_URL);
             
             if (listData.length > 0) {
                 let slidesContent = [];
-                // ברירת מחדל: אם אין כותרת בהתחלה, נקרא לזה "רשימה"
-                let currentSlide = { title: "קוראים בתורה", items: [] }; 
+                // הוספנו duration לאובייקט
+                let currentSlide = { title: "קוראים בתורה", items: [], duration: SLIDE_DURATION }; 
                 let isNextLineTitle = false;
 
                 listData.forEach(row => {
                     const col1 = row[0] ? row[0].trim() : '';
                     const col2 = row[1] ? row[1].trim() : '';
                     
-                    // דילוג על שורות ריקות לגמרי
                     if (!col1 && !col2) return;
 
-                    // זיהוי דף חדש
                     if (col1.includes('*****')) {
-                        if (currentSlide.items.length > 0) {
-                            slidesContent.push(currentSlide);
-                        }
-                        currentSlide = { title: "", items: [] };
+                        if (currentSlide.items.length > 0) slidesContent.push(currentSlide);
+                        currentSlide = { title: "", items: [], duration: SLIDE_DURATION };
                         isNextLineTitle = true;
                     } 
                     else if (isNextLineTitle) {
-                        // השורה שאחרי הכוכביות היא הכותרת
-                        currentSlide.title = col1; // הכותרת נמצאת בעמודה הראשונה
+                        currentSlide.title = col1;
+                        // --- בדיקת זמן תצוגה (עמודה B) ---
+                        const seconds = parseInt(col2); // מנסים לקרוא מספר מעמודה B
+                        if (!isNaN(seconds) && seconds > 0) {
+                            currentSlide.duration = seconds * 1000; // המרה לאלפיות שנייה
+                        }
                         isNextLineTitle = false;
                     } 
                     else {
-                        // שורה רגילה של מידע (תפקיד + שם)
                         currentSlide.items.push({ role: col1, name: col2 });
                     }
                 });
 
-                // הוספת השקופית האחרונה
-                if (currentSlide.items.length > 0) {
-                    slidesContent.push(currentSlide);
-                }
+                if (currentSlide.items.length > 0) slidesContent.push(currentSlide);
 
-                // יצירת ה-HTML
+                // רינדור ל-HTML עם ה-Attribute החדש
                 slidesContent.forEach(slide => {
                     const div = document.createElement('div');
                     div.className = 'slide dynamic-slide';
+                    // שומרים את הזמן בתוך ה-HTML
+                    div.setAttribute('data-duration', slide.duration);
                     
-                    // בניית הרשימה עם ה-CSS של role שכבר בנינו
                     let html = `<h1>${slide.title}</h1><div class="content-box"><ul>`;
                     slide.items.forEach(item => {
-                        html += `<li>
-                                    <span class="role">${item.role}</span>
-                                    <span>${item.name}</span>
-                                 </li>`;
+                        html += `<li><span class="role">${item.role}</span><span>${item.name}</span></li>`;
                     });
                     html += `</ul></div>`;
-                    
                     div.innerHTML = html;
                     frame.insertBefore(div, document.getElementById('progress'));
                 });
             }
-        } catch (e) { console.error("Error fetching Lists:", e); }
+        } catch (e) { console.error("Error Lists:", e); }
 
         // ============================================================
-        // חלק ב': הודעות וחדשות (טקסט חופשי ותמונות)
+        // חלק ב': הודעות וחדשות
         // ============================================================
         try {
             const newsData = await fetchCSV(NEWS_CSV_URL);
             
             if (newsData.length > 0) {
                 let slidesContent = [];
-                let currentSlide = { title: "הודעות הקהילה", items: [] };
+                let currentSlide = { title: "הודעות הקהילה", items: [], duration: SLIDE_DURATION };
                 let isNextLineTitle = false;
 
                 newsData.forEach(row => {
                     const text = row[0] ? row[0].trim() : '';
+                    const timeVal = row[1] ? row[1].trim() : ''; // עמודה B בחדשות
+
                     if (!text) return;
 
                     if (text.includes('*****')) {
                         if (currentSlide.items.length > 0 || currentSlide.title !== "הודעות הקהילה") {
                             slidesContent.push(currentSlide);
                         }
-                        currentSlide = { title: "", items: [] };
+                        currentSlide = { title: "", items: [], duration: SLIDE_DURATION };
                         isNextLineTitle = true;
                     } 
                     else if (isNextLineTitle) {
                         currentSlide.title = text;
+                        // --- בדיקת זמן תצוגה ---
+                        const seconds = parseInt(timeVal);
+                        if (!isNaN(seconds) && seconds > 0) {
+                            currentSlide.duration = seconds * 1000;
+                        }
                         isNextLineTitle = false;
                     } 
                     else {
@@ -468,13 +470,13 @@
                     }
                 });
 
-                if (currentSlide.items.length > 0) {
-                    slidesContent.push(currentSlide);
-                }
+                if (currentSlide.items.length > 0) slidesContent.push(currentSlide);
 
                 slidesContent.forEach(slide => {
                     const div = document.createElement('div');
                     div.className = 'slide dynamic-slide';
+                    div.setAttribute('data-duration', slide.duration); // שמירת הזמן
+                    
                     let html = `<h1>${slide.title}</h1><div class="content-box"><ul>`;
                     slide.items.forEach(item => {
                         if (item.type === 'image') {
@@ -488,7 +490,7 @@
                     frame.insertBefore(div, document.getElementById('progress'));
                 });
             }
-        } catch (e) { console.error("Error fetching News:", e); }
+        } catch (e) { console.error("Error News:", e); }
         
         slides = document.querySelectorAll('.slide');
     }
@@ -588,59 +590,114 @@
 
 
     // --- לוגיקת גלילה (מהקוד הקודם) ---
-    function startAutoScroll(slideElement) {
+    function startAutoScroll(slideElement, duration) {
         const box = slideElement.querySelector('.content-box');
+        
+        // איפוס
         if (box) box.scrollTop = 0;
         
-        if (box && box.scrollHeight > box.clientHeight) {
-            setTimeout(() => {
-                const distance = box.scrollHeight - box.clientHeight;
-                const timeAvailable = SLIDE_DURATION - 3000; 
-                const speed = distance / (timeAvailable / 20); 
-                
-                scrollInterval = setInterval(() => {
-                    box.scrollTop += 1; 
-                    if (box.scrollTop + box.clientHeight >= box.scrollHeight) {
-                        clearInterval(scrollInterval);
-                    }
-                }, 30); 
-            }, 2000);
+        // בדיקה אם יש בכלל לאן לגלול
+        if (!box || box.scrollHeight <= box.clientHeight) return;
+
+        // --- הגדרות ---
+        const startDelay = 2000; 
+        const endDelay = 3000;
+        
+        // חישוב המרחק הכולל
+        const totalDistance = box.scrollHeight - box.clientHeight;
+        
+        // חישוב הזמן המקורי שעומד לרשותנו
+        let availableTime = Math.max(duration - startDelay - endDelay, 1000);
+
+        // --- התיקון: בדיקת מהירות מינימלית ---
+        // נניח שמהירות קריאה נעימה היא מינימום 25 פיקסלים בשנייה
+        const minSpeedPixelsPerSecond = 25; 
+        
+        // כמה זמן *באמת* צריך כדי לגלול את המרחק הזה במהירות סבירה?
+        const timeNeededForMinSpeed = (totalDistance / minSpeedPixelsPerSecond) * 1000;
+        
+        // אם יש לנו המון זמן למעט מרחק (גלילה איטית להחריד) -> נקצר את זמן הגלילה
+        // אנחנו לוקחים את המינימום בין "הזמן שיש" ל"זמן שצריך"
+        const finalScrollTime = Math.min(availableTime, timeNeededForMinSpeed);
+
+        // --- הפיזיקה ---
+        // שימוש ב-requestAnimationFrame לגלילה חלקה יותר מאשר setInterval
+        let startTime = null;
+        let startScrollTop = box.scrollTop; // בדרך כלל 0
+
+        // הפונקציה שתרוץ 60 פעמים בשנייה
+        function step(timestamp) {
+            if (!startTime) startTime = timestamp;
+            
+            // כמה זמן עבר מאז שהתחלנו לגלול
+            const elapsed = timestamp - startTime;
+            
+            // חישוב המיקום היחסי (בין 0 ל-1)
+            // Math.min מבטיח שלא נעבור את 100% גם אם הזמן נגמר
+            const progress = Math.min(elapsed / finalScrollTime, 1);
+            
+            // הזזה בפועל
+            box.scrollTop = startScrollTop + (totalDistance * progress);
+
+            // אם עדיין לא סיימנו את הזמן שהוקצב לגלילה, נבקש עוד "פריים"
+            if (progress < 1 && slideElement.classList.contains('active')) {
+                window.requestAnimationFrame(step);
+            }
         }
+
+        // הפעלה אחרי ההשהייה הראשונית
+        setTimeout(() => {
+            if (slideElement.classList.contains('active')) {
+                window.requestAnimationFrame(step);
+            }
+        }, startDelay);
     }
 
     // --- ניהול המצגת ---
     async function showSlide(index) {
-        // בדיקה: אם חזרנו להתחלה, האם הגיע הזמן לרענן נתונים?
-        const now = new Date().getTime();
-        if (index === 0 && (now - lastFetchTime > REFRESH_INTERVAL)) {
-            console.log("Refreshing data...");
-            await buildDynamicSlides(); // בנייה מחדש של ה-DOM
-            await loadShabbatTimes();
-            lastFetchTime = now;
-        }
+    // ניקוי טיימרים קודמים
+    if (slideTimer) clearTimeout(slideTimer);
+    if (scrollInterval) clearInterval(scrollInterval);
 
-        if (scrollInterval) clearInterval(scrollInterval);
-        
-        // עדכון NodeList למקרה שהשתנה
-        slides = document.querySelectorAll('.slide');
-        
-        // הגנה מפני אינדקס חורג (אם מחקנו שקופיות)
-        if (index >= slides.length) index = 0;
-        currentSlideIndex = index;
-
-        slides.forEach(s => s.classList.remove('active'));
-        slides[currentSlideIndex].classList.add('active');
-        
-        startAutoScroll(slides[currentSlideIndex]);
-        
-        const bar = document.getElementById('progress');
-        bar.style.transition = 'none';
-        bar.style.width = '0%';
-        setTimeout(() => {
-            bar.style.transition = `width ${SLIDE_DURATION}ms linear`;
-            bar.style.width = '100%';
-        }, 50);
+    // בדיקת רענון נתונים (רק כשחוזרים להתחלה)
+    const now = new Date().getTime();
+    if (index === 0 && (now - lastFetchTime > REFRESH_INTERVAL)) {
+        console.log("Refreshing data...");
+        await buildDynamicSlides();
+        await loadShabbatTimes();
+        lastFetchTime = now;
+        slides = document.querySelectorAll('.slide'); // עדכון הרשימה
     }
+
+    // הגנה מאינדקס חורג
+    if (index >= slides.length) index = 0;
+    currentSlideIndex = index;
+
+    // החלפת שקופיות ויזואלית
+    slides.forEach(s => s.classList.remove('active'));
+    const currentSlideEl = slides[currentSlideIndex];
+    currentSlideEl.classList.add('active');
+
+    // --- קביעת הזמן לשקופית הנוכחית ---
+    // מנסים לקחת מה-HTML, אם אין (כמו בשקופית שבת) לוקחים ברירת מחדל
+    let duration = parseInt(currentSlideEl.getAttribute('data-duration'));
+    if (!duration || isNaN(duration)) duration = SLIDE_DURATION;
+
+    // הפעלת גלילה אוטומטית עם הזמן הספציפי
+    startAutoScroll(currentSlideEl, duration);
+
+    // אנימציית הבר למטה
+    const bar = document.getElementById('progress');
+    bar.style.transition = 'none';
+    bar.style.width = '0%';
+    setTimeout(() => {
+        bar.style.transition = `width ${duration}ms linear`; // שימוש בזמן הדינמי
+        bar.style.width = '100%';
+    }, 50);
+
+    // קביעת המעבר לשקופית הבאה
+    slideTimer = setTimeout(nextSlide, duration);
+}
 
     function nextSlide() {
         // קידום האינדקס
@@ -650,15 +707,16 @@
 
     // --- אתחול ראשוני ---
     async function init() {
-        await loadShabbatTimes();
-        await buildDynamicSlides();
-        document.getElementById('loader').style.display = 'none';
-        lastFetchTime = new Date().getTime();
-        
-        slides = document.querySelectorAll('.slide');
-        showSlide(0);
-        setInterval(nextSlide, SLIDE_DURATION);
-    }
+    await loadShabbatTimes();
+    await buildDynamicSlides();
+    document.getElementById('loader').style.display = 'none';
+    lastFetchTime = new Date().getTime();
+
+    slides = document.querySelectorAll('.slide');
+
+    // התחלת השרשרת
+    showSlide(0); 
+}
 
     function updateClock() {
         const now = new Date();
