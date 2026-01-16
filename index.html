@@ -104,6 +104,9 @@
         -ms-overflow-style: none;
         scrollbar-width: none;
         scroll-behavior: auto;
+
+        mask-image: linear-gradient(to bottom, transparent 0%, black 30px, black calc(100% - 30px), transparent 100%);
+        -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 30px, black calc(100% - 30px), transparent 100%);
     }
     
     .content-box::-webkit-scrollbar {
@@ -116,6 +119,7 @@
         padding: 0;
         margin: 0;
         width: 100%;
+        padding-bottom: 50px;
     }
 
     li {
@@ -479,70 +483,94 @@
 
     async function loadShabbatTimes() {
         try {
-            // הוספנו פרמטר &o=on כדי לוודא שנקבל את ספירת העומר
+            // הוספנו &M=on (מברכים) ו-&o=on (עומר)
             const response = await fetch('https://www.hebcal.com/shabbat?cfg=json&geonameid=294071&M=on&lg=he&o=on&t=' + new Date().getTime()); 
             const data = await response.json();
             
+            // --- מציאת תאריכי המסגרת (שישי ושבת) ---
+            const parashaItem = data.items.find(i => i.category === "parashat");
+            
+            let shabbatDateISO = "";
+            let fridayDateISO = "";
+
+            if (parashaItem) {
+                // תאריך השבת (YYYY-MM-DD)
+                shabbatDateISO = parashaItem.date.substring(0, 10);
+                
+                // חישוב תאריך יום שישי (יום אחד אחורה)
+                const d = new Date(parashaItem.date);
+                d.setDate(d.getDate() - 1);
+                fridayDateISO = d.toISOString().substring(0, 10);
+            }
+
             // --- שלב 1: כותרת ראשית (חג או פרשה) ---
             let titleText = "";
-            const holidayItem = data.items.find(i => i.category === "holiday" && !i.title.includes("ערב") && !i.title.includes("נר")); // מתעלמים מנרות חנוכה בכותרת הראשית
-            const parashaItem = data.items.find(i => i.category === "parashat");
-
-            // שמירת הפריטים לשימוש מאוחר יותר
-            const mainItems = [holidayItem, parashaItem];
+            
+            // מחפשים חג שחל *בדיוק* בשישי או בשבת
+            const holidayItem = data.items.find(i => 
+                i.category === "holiday" && 
+                !i.title.includes("ערב") && 
+                !i.title.includes("נר") &&
+                (i.date.includes(shabbatDateISO) || i.date.includes(fridayDateISO))
+            );
 
             if (holidayItem) {
                 titleText = holidayItem.hebrew;
-                // עדכון כיתובים לחג
-                const lc = document.getElementById('label-candles');
-                const lh = document.getElementById('label-havdalah');
-                if(lc) lc.innerText = "כניסת החג:";
-                if(lh) lh.innerText = "יציאת החג:";
+                document.getElementById('label-candles').innerText = "כניסת החג:";
+                document.getElementById('label-havdalah').innerText = "יציאת החג:";
             } else if (parashaItem) {
-                titleText = parashaItem.hebrew;
-                 // עדכון כיתובים לשבת
-                const lc = document.getElementById('label-candles');
-                const lh = document.getElementById('label-havdalah');
-                if(lc) lc.innerText = "כניסת שבת:";
-                if(lh) lh.innerText = "יציאת שבת:";
+                titleText = parashaItem.hebrew; // Hebcal כבר כולל את המילה "פרשת"
+                document.getElementById('label-candles').innerText = "כניסת שבת:";
+                document.getElementById('label-havdalah').innerText = "יציאת שבת:";
             } else {
                 titleText = "ברוכים הבאים";
             }
             
             document.getElementById('parasha-name').innerText = titleText;
 
-            // --- שלב 2: אירועים מיוחדים (התוספת החדשה) ---
+
+            // --- שלב 2: אירועים מיוחדים (עם סינון תאריך) ---
             let specialEvents = [];
 
-            // בדיקת ספירת העומר
-            const omerItem = data.items.find(i => i.category === "omer");
+            // א. שבת מברכים (תמיד רלוונטי לשבת הזו)
+            const mevarchim = data.items.find(i => i.category === "mevarchim");
+            if (mevarchim) {
+                // הוא מחזיר טקסט כמו "מברכים החודש שבט". נציג אותו.
+                specialEvents.push(mevarchim.hebrew);
+            }
+
+            // ב. ספירת העומר (רק אם רלוונטי להיום)
+            const omerItem = data.items.find(i => i.category === "omer" && i.date.includes(shabbatDateISO));
             if (omerItem) {
-                // Hebcal מחזיר "Sefirat HaOmer: 25". אנחנו רוצים רק את העברית.
                 specialEvents.push(omerItem.hebrew); 
             }
 
-            // בדיקת ראש חודש
-            const roshChodesh = data.items.find(i => i.category === "roshchodesh");
+            // ג. ראש חודש (רק אם חל בשישי או שבת!)
+            const roshChodesh = data.items.find(i => 
+                i.category === "roshchodesh" && 
+                (i.date.includes(shabbatDateISO) || i.date.includes(fridayDateISO))
+            );
             if (roshChodesh) {
                 specialEvents.push(roshChodesh.hebrew);
             }
 
-            // בדיקת דברים נוספים (נר חנוכה, חול המועד) שלא הופיעו בכותרת
+            // ד. דברים נוספים (חול המועד, נר חנוכה) - רק אם הם בשישי/שבת
             data.items.forEach(item => {
-                if (item.category === "holiday" && item !== holidayItem) {
-                    // אם זה חנוכה (שיש לו נרות) או חול המועד
+                // בודקים תאריך
+                const isToday = item.date.includes(shabbatDateISO) || item.date.includes(fridayDateISO);
+                
+                if (isToday && item.category === "holiday" && item !== holidayItem) {
                     if (item.hebrew.includes("נר") || item.hebrew.includes("חול המועד")) {
                         specialEvents.push(item.hebrew);
                     }
                 }
             });
 
-            // הצגה במסך: מחברים את הכל עם מקף מפריד
             const specialText = specialEvents.join(" | ");
             document.getElementById('special-day-text').innerText = specialText;
 
 
-            // --- שלב 3: תאריך עברי וזמנים (ללא שינוי) ---
+            // --- שלב 3: תאריך עברי וזמנים (כרגיל) ---
             let dateISO = parashaItem ? parashaItem.date : (holidayItem ? holidayItem.date : null);
             if (dateISO) {
                  dateISO = dateISO.substring(0, 10);
