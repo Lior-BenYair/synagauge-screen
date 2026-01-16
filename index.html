@@ -376,6 +376,10 @@
                         }
                         isNextLineTitle = false;
                     } 
+                    else if (col1.startsWith('^')){
+                        // ignore lines starting with ^
+                        // do nothing
+                    }
                     else {
                         currentSlide.items.push({ role: col1, name: col2 });
                     }
@@ -433,7 +437,11 @@
                             currentSlide.duration = seconds * 1000;
                         }
                         isNextLineTitle = false;
-                    } 
+                    }  
+                    else if (col1.startsWith('^')){
+                        // ignore lines starting with ^
+                        // do nothing
+                    }
                     else {
                         if (text.startsWith('IMG:')) {
                             const imgUrl = text.replace('IMG:', '').trim();
