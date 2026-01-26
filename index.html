@@ -481,10 +481,33 @@
         slides = document.querySelectorAll('.slide');
     }
 
+    // פונקציה שמחזירה את התאריך הנוכחי - או את התאריך מה-URL אם יש
+    function getSystemDate() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const dateParam = urlParams.get('date'); // מצפה לפורמט YYYY-MM-DD
+        
+        if (dateParam) {
+            return new Date(dateParam);
+        }
+        return new Date(); // אם אין פרמטר, מחזיר את הזמן האמיתי
+    }
+
     async function loadShabbatTimes() {
         try {
-            // הוספנו &M=on (מברכים) ו-&o=on (עומר)
-            const response = await fetch('https://www.hebcal.com/shabbat?cfg=json&geonameid=294071&M=on&lg=he&o=on&t=' + new Date().getTime()); 
+            // --- חישוב התאריך לסימולציה ---
+            const now = getSystemDate();
+            const gy = now.getFullYear();
+            const gm = now.getMonth() + 1; // חודשים ב-JS מתחילים מ-0
+            const gd = now.getDate();
+
+            // בניית ה-URL עם התאריך הספציפי
+            const baseUrl = `https://www.hebcal.com/shabbat?cfg=json&geonameid=294071&M=on&lg=he&o=on`;
+            const dateParams = `&gy=${gy}&gm=${gm}&gd=${gd}`;
+            
+            // הוספת cache buster כדי שהדפדפן לא ישמור תוצאות ישנות
+            const fetchUrl = baseUrl + dateParams + '&t=' + new Date().getTime();
+
+            const response = await fetch(fetchUrl); 
             const data = await response.json();
             
             // --- מציאת תאריכי המסגרת (שישי ושבת) ---
@@ -514,7 +537,7 @@
                 (i.date.includes(shabbatDateISO) || i.date.includes(fridayDateISO))
             );
 
-            if (holidayItem) {
+            if (holidayItem && !holidayItem.subcat.includes("shabbat")) {
                 titleText = holidayItem.hebrew;
                 document.getElementById('label-candles').innerText = "כניסת החג:";
                 document.getElementById('label-havdalah').innerText = "יציאת החג:";
@@ -526,6 +549,9 @@
                 titleText = "ברוכים הבאים";
             }
             
+            if(holidayItem && holidayItem.subcat.includes("shabbat")) {
+                titleText += " | " + titleText;
+            }
             document.getElementById('parasha-name').innerText = titleText;
 
 
