@@ -522,12 +522,14 @@
             const holidayMajorItem = data.items.find(i => 
                 i.category === "holiday" && 
                 i.subcat == "major" && 
-                (i.date.includes(todayDateISO) || i.yomtov === true)
+                (i.date.includes(todayDateISO) || (i.yomtov === true) && i.date > todayDateISO)
             );
 
             const holidayShabbatItem = data.items.find(i => 
                 i.category === "holiday" && 
-                (i.subcat.includes("shabbat") || i.subcat.includes("modern"))
+                (i.subcat.includes("shabbat") || 
+                ((i.subcat.includes("modern") || i.subcat.includes("minor")) ))
+                && i.date.includes(todayDateISO)
             );
 
             if (holidayMajorItem ) {
