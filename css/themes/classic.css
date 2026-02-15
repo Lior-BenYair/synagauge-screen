@@ -1,0 +1,53 @@
+/* css/themes/classic.css */
+:root {
+    --bg-color: #1e293b;
+    --text-color: #f1f5f9;
+    --accent-color: #38bdf8; /* כחול בהיר */
+    --frame-bg: #1e293b;
+    --card-bg: #334155;
+}
+
+/* סידור אלמנטים לגובה (List) */
+.times-container {
+    display: flex;
+    flex-direction: column; /* זה הסוד! */
+    justify-content: center;
+    gap: 30px;
+    width: 80%;
+    background: var(--card-bg);
+    padding: 40px;
+    border-radius: 15px;
+}
+
+.time-block {
+    display: flex;
+    flex-direction: row-reverse; /* טקסט מימין לשמאל */
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px dashed #ffffff50;
+    padding-bottom: 10px;
+}
+
+.vertical-divider {
+    display: none; /* מסתיר את הקו */
+}
+
+/* פונטים רגילים */
+.time-value {
+    font-size: 3em;
+    font-weight: bold;
+}
+
+.time-label {
+    font-size: 2.5em;
+}
+
+.icon-container {
+    display: none; /* מסתיר אייקונים בעיצוב הנקי */
+}
+
+.shabbat-footer {
+    margin-top: 30px;
+    color: var(--accent-color);
+    font-size: 1.2em;
+}

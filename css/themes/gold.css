@@ -1,0 +1,21 @@
+/* css/themes/gold.css */
+
+:root {
+    --bg-color: #27272a; /* אפור פחם */
+    --text-color: #ffffff;
+    --accent-color: #fbbf24; /* זהב בוהק */
+    
+    /* רקע מלכותי - סגול עמוק מאוד */
+    --frame-bg: linear-gradient(135deg, #3b0764 0%, #1e1b4b 100%);
+    
+    --card-bg: rgba(0, 0, 0, 0.6); /* כהה ושקוף יותר */
+}
+
+/* אפקט זוהר לזהב */
+h1 {
+    text-shadow: 0 0 10px rgba(251, 191, 36, 0.5);
+}
+
+.frame {
+    border-color: #ffd700; /* מסגרת זהב טהור */
+}
