@@ -1,0 +1,115 @@
+/* css/themes/modern.css */
+
+:root {
+    --bg-color: #0f172a;
+    --text-color: #ffffff;
+    --accent-color: #fbbf24;
+    --frame-bg: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+    --card-bg: rgba(30, 41, 59, 0.9);
+}
+
+/* --- כותרת: הקטנו גובה מ-25% ל-20% כדי לפנות מקום לשעונים --- */
+.shabbat-header {
+    height: 18%; /* צמצמנו את הגובה כדי שהשעונים יוכלו לעלות */
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* מירכוז אנכי בתוך החלק העליון */
+    align-items: center;
+    
+    padding-top: 30px; /* רווח מלמעלה (בין המסגרת לטקסט) */
+    z-index: 5; /* שיהיה מעל אלמנטים אחרים אם יש חפיפה */
+}
+
+h1#parasha-name {
+    font-size: 3.2em;
+    margin: 0;
+    line-height: 1;
+    text-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+h3#hebrew-date-display {
+    font-size: 1.6em;
+    color: #cbd5e1;
+    margin-top: 5px;
+    margin-bottom: 0;
+}
+
+h4#special-day-text {
+    font-size: 1.8em;
+    color: var(--accent-color);
+    font-weight: bold;
+    margin-top: 2px;
+    margin-bottom: 2px;
+    min-height: 1.5em;
+}
+
+/* --- מיכל השעונים: הרמנו אותו למעלה --- */
+.times-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start; /* הצמדה לחלק העליון של המיכל */
+    width: 100%;
+    height: 60%;
+    
+    /* הטריק: משיכה למעלה כדי להתקרב לכותרת */
+    margin-top: 12px; 
+}
+
+.time-block {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    
+    /* ביטול ריווח מיותר */
+    padding-top: 0; 
+}
+
+.vertical-divider {
+    width: 2px;
+    height: 50%; /* קיצרתי את הקו שיראה אלגנטי יותר */
+    background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.2), transparent);
+    display: block;
+    margin-top: 20px; /* שהקו יתחיל קצת יותר נמוך מהמספרים */
+}
+
+.time-value {
+    font-size: 8.5em; /* הגדלתי עוד קצת שיהיה מרשים */
+    font-weight: 700;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    text-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    
+    /* קצת רווח מלמטה כדי שהאייקון לא יידבק */
+    margin-bottom: 10px;
+}
+
+.time-label {
+    font-size: 2em;
+    color: var(--accent-color);
+    margin-bottom: 5px;
+    font-weight: 300;
+    opacity: 0.9;
+}
+
+.icon-container {
+    font-size: 2.5em;
+    opacity: 0.7;
+    margin-top: 0;
+}
+
+/* css/themes/modern.css */
+
+.shabbat-footer {
+    /* רק עיצוב גרפי! */
+    background: rgba(15, 23, 42, 0.95); /* הרקע הכהה */
+    border-top: 1px solid rgba(251, 191, 36, 0.3);
+    color: var(--accent-color);
+    
+    font-size: 1.5em; /* גודל טקסט */
+    font-weight: bold;
+    box-shadow: 0 -4px 15px rgba(0,0,0,0.3);
+}
+
