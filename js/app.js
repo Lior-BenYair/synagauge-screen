@@ -15,6 +15,10 @@ let scrollInterval = null;
 let lastFetchTime = 0;
 let slideTimer = null;
 
+// --- תוספות לפורים ---
+let cycleCount = 0;       // סופר כמה סיבובים עשתה המצגת
+let isPurimMode = false;  // האם להפעיל את השיגעון
+
 // js/app.js
 
 function loadTheme() {
@@ -26,7 +30,6 @@ function loadTheme() {
     const themeLink = document.getElementById('theme-link');
     if (themeLink) {
         themeLink.href = `css/themes/${themeName}.css`;
-        // console.log(`Theme loaded: ${themeName}`); // אופציונלי לניפוי באגים
     }
 }
 
@@ -197,7 +200,7 @@ async function loadShabbatTimes() {
         // בחירת האירוע הראשי בפועל
         let mainItem = null;
         let titleText = "ברוכים הבאים";
-        let isMainTitleParasha = false; // <--- המשתנה החשוב החדש שלך
+        let isMainTitleParasha = false; 
         let isMajorHoliday = false;
 
         if (titleCandidates.length > 0) {
@@ -211,7 +214,6 @@ async function loadShabbatTimes() {
             isMajorHoliday = (mainItem.category === "holiday" && mainItem.subcat === "major");
 
             // תיקוני טקסט
-            // תיקון טקסט ל"שבת חול המועד" - בדיקה גמישה שתופסת את כל סוגי הגרשיים
             if (titleText.includes("פסח") && (titleText.includes("חוה") || titleText.includes("חול המועד"))) {
                 titleText = "שבת חול המועד פסח";
             }
@@ -250,10 +252,6 @@ async function loadShabbatTimes() {
 
             // בדיקת שבת מיוחדת (שקלים, שובה וכו')
             if (item.category === "holiday" && item.subcat === "shabbat" && !item.hebrew.includes("חול המועד")) {
-                
-                // --- התיקון שלך: ---
-                // מוסיפים שבת מיוחדת *רק* אם הכותרת הראשית היא פרשה רגילה.
-                // אם הכותרת היא חג (כמו ראש השנה), לא נוסיף "שבת שובה".
                 if (isMainTitleParasha) {
                     specialAdditions.push(item.hebrew);
                 }
@@ -273,7 +271,7 @@ async function loadShabbatTimes() {
                 if (item.category === "holiday" && 
                     item.subcat !== "major" && 
                     item.subcat !== "shabbat" &&
-                    item !== mainItem) { // לוודא שזה לא הכותרת עצמה
+                    item !== mainItem) { 
                     
                     if (!specialAdditions.includes(item.hebrew)) {
                         specialAdditions.push(item.hebrew);
@@ -327,6 +325,16 @@ async function loadShabbatTimes() {
             }
         }
 
+        // --- הוספה עבור פורים: בדיקה אם זה פורים ---
+        const titleCheck = document.getElementById('parasha-name').innerText;
+        const specialCheck = document.getElementById('special-day-text').innerText;
+        
+        if (specialCheck.includes("שבת זכור")) {
+            isPurimMode = true;
+            console.log("Purim Mode: ACTIVATED 🎭");
+        }
+        // isPurimMode = true; // לבדיקות בלבד - בטל הערה זו כדי לכפות מצב פורים
+
     } catch(e) { console.log("Hebcal error", e); }
 }
 
@@ -378,7 +386,26 @@ async function showSlide(index) {
         slides = document.querySelectorAll('.slide');
     }
 
-    if (index >= slides.length) index = 0;
+    // --- הוספה עבור פורים: לוגיקת האפקטים ---
+    if (index >= slides.length) {
+        index = 0; // חזרה להתחלה
+        
+        // כאן נכנס הקסם של פורים
+        if (isPurimMode) {
+            cycleCount++;
+            // איפוס: מנקים אפקטים קודמים
+            document.body.classList.remove('purim-mirror', 'purim-upside', 'purim-invert', 'purim-drunk');
+
+            // רק במחזורים אי-זוגיים מפעילים אפקט
+            if (cycleCount % 2 !== 0) {
+                const effects = ['purim-mirror', 'purim-upside', 'purim-invert', 'purim-drunk'];
+                const randomEffect = effects[Math.floor(Math.random() * effects.length)];
+                document.body.classList.add(randomEffect);
+            }
+        }
+    }
+    // ---------------------------------------
+
     currentSlideIndex = index;
 
     slides.forEach(s => s.classList.remove('active'));
@@ -402,8 +429,9 @@ async function showSlide(index) {
 }
 
 function nextSlide() {
-    let nextIndex = (currentSlideIndex + 1) % slides.length;
-    showSlide(nextIndex);
+    // מוחקים את החישוב עם ה-% (מודולו)
+    // פשוט שולחים את האינדקס הבא, ונותנים ל-showSlide לטפל בחזרה להתחלה
+    showSlide(currentSlideIndex + 1);
 }
 
 function updateClock() {
@@ -431,8 +459,6 @@ async function init() {
 
     slides = document.querySelectorAll('.slide');
     
-
-
     // התחלת המצגת
     showSlide(0); 
     

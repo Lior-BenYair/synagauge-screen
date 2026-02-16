@@ -1,0 +1,31 @@
+/* אפקטים לפורים - חובה להוסיף לקובץ ה-CSS */
+
+/* מראה */
+body.purim-mirror {
+    transform: scaleX(-1);
+    overflow-x: hidden;
+}
+
+/* הפוך (אוסטרליה) */
+body.purim-upside {
+    transform: rotate(180deg);
+    overflow: hidden;
+}
+
+/* צבעים משוגעים (נגטיב) */
+body.purim-invert {
+    filter: invert(1) hue-rotate(180deg);
+}
+
+/* שיכור (נטוי ומטושטש קצת) */
+body.purim-drunk {
+    animation: drunk 3s infinite ease-in-out;
+}
+
+@keyframes drunk {
+    0% { transform: rotate(0deg) scale(1); }
+    25% { transform: rotate(2deg) scale(1.01); }
+    50% { transform: rotate(-2deg) scale(0.99); }
+    75% { transform: rotate(1deg) scale(1.00); }
+    100% { transform: rotate(0deg) scale(1); }
+}
