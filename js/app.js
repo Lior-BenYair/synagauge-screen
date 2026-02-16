@@ -9,6 +9,11 @@ const SLIDE_DURATION = 10000;
 const REFRESH_INTERVAL = 5 * 60 * 1000; 
 // ==========================================
 
+// קריאת מכפיל המהירות מה-URL
+const urlParams = new URLSearchParams(window.location.search);
+// אם כתוב ?speed=2 אז המהירות פי 2 (הזמן נחלק ב-2). ברירת מחדל: 1.
+const SPEED_FACTOR = parseFloat(urlParams.get('speed')) || 1;
+
 let slides = []; 
 let currentSlideIndex = 0;
 let scrollInterval = null;
@@ -344,12 +349,25 @@ function startAutoScroll(slideElement, duration) {
     if (box) box.scrollTop = 0;
     if (!box || box.scrollHeight <= box.clientHeight) return;
 
-    const startDelay = 2000; 
-    const endDelay = 3000;
+    // כאן התיקון: חילוק הזמנים בפקטור המהירות
+    // אם SPEED_FACTOR לא מוגדר (למשל לא הועתק), נשתמש ב-1 כברירת מחדל
+    const factor = (typeof SPEED_FACTOR !== 'undefined') ? SPEED_FACTOR : 1;
+
+    const startDelay = 2000 / factor; // המתנה לפני גלילה (מותאמת מהירות)
+    const endDelay = 3000 / factor;   // המתנה בסוף גלילה (מותאמת מהירות)
+
     const totalDistance = box.scrollHeight - box.clientHeight;
-    let availableTime = Math.max(duration - startDelay - endDelay, 1000);
-    const minSpeedPixelsPerSecond = 25; 
+    
+    // חישוב הזמן שנשאר לגלילה נטו
+    let availableTime = Math.max(duration - startDelay - endDelay, 1000 / factor);
+    
+    // הגדרת מהירות מינימלית (פיקסלים לשנייה) - גם אותה נאיץ אם צריך
+    const minSpeedPixelsPerSecond = 25 * factor; 
+    
     const timeNeededForMinSpeed = (totalDistance / minSpeedPixelsPerSecond) * 1000;
+    
+    // בוחרים את הזמן הקצר מבין השניים (כדי לא לגלול לאט מדי)
+    // אבל מוודאים שלא חורגים מהזמן הפנוי בשקופית
     const finalScrollTime = Math.min(availableTime, timeNeededForMinSpeed);
 
     let startTime = null;
@@ -358,7 +376,10 @@ function startAutoScroll(slideElement, duration) {
     function step(timestamp) {
         if (!startTime) startTime = timestamp;
         const elapsed = timestamp - startTime;
+        
+        // חישוב ההתקדמות (בין 0 ל-1)
         const progress = Math.min(elapsed / finalScrollTime, 1);
+        
         box.scrollTop = startScrollTop + (totalDistance * progress);
 
         if (progress < 1 && slideElement.classList.contains('active')) {
@@ -412,9 +433,9 @@ async function showSlide(index) {
     const currentSlideEl = slides[currentSlideIndex];
     currentSlideEl.classList.add('active');
 
-    let duration = parseInt(currentSlideEl.getAttribute('data-duration'));
-    if (!duration || isNaN(duration)) duration = SLIDE_DURATION;
-
+    let rawDuration = parseInt(currentSlideEl.getAttribute('data-duration'));
+    if (!rawDuration || isNaN(rawDuration)) rawDuration = SLIDE_DURATION;
+    const duration = rawDuration / SPEED_FACTOR;
     startAutoScroll(currentSlideEl, duration);
 
     const bar = document.getElementById('progress');
