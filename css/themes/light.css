@@ -1,29 +1,23 @@
 /* css/themes/light.css */
-
 :root {
-    /* רקע בהיר (אפור כמעט לבן) */
-    --bg-color: #f8fafc;
+    --bg-color: #f1f5f9;           /* אפור בהיר מאוד */
+    --text-color: #1e293b;         /* כחול כהה (כמעט שחור) */
+    --sub-text-color: #475569;     /* אפור כהה */
+    --accent-color: #0f766e;       /* טורקיז כהה (במקום זהב, לקריאות) */
     
-    /* טקסט כהה מאוד לקריאות */
-    --text-color: #1e293b; 
-    
-    /* צבע הדגשה - בחרתי טורקיז כהה במקום הזהב, זה נראה מכובד ביום */
-    --accent-color: #0f766e; 
-    
-    /* גרדיאנט בהיר למסגרת */
     --frame-bg: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+    --card-bg: rgba(255, 255, 255, 0.9);
     
-    /* רקע לכרטיסיות - לבן כמעט אטום */
-    --card-bg: rgba(255, 255, 255, 0.95);
+    --clock-bg: rgba(255, 255, 255, 0.8);
+    --footer-bg: rgba(226, 232, 240, 0.95);
 }
 
-/* התאמות ספציפיות למצב בהיר (אופציונלי) */
-/* לפעמים הצלליות של הלילה נראות מלוכלכות ביום, אז מעדנים אותן */
-.content-box {
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    border: 1px solid #cbd5e1; /* מסגרת דקה עוזרת בבהיר */
+/* התאמה לבהיר: צלליות עדינות יותר */
+h1, .time-value {
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
 }
 
-h1 {
-    text-shadow: 1px 1px 2px rgba(0,0,0,0.1); /* פחות צל לטקסט */
+/* שיהיה קו מפריד נראה לעין בבהיר */
+.vertical-divider {
+    background: linear-gradient(to bottom, transparent, rgba(0,0,0,0.1), transparent);
 }
