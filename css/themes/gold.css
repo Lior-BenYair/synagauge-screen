@@ -1,21 +1,20 @@
 /* css/themes/gold.css */
-
 :root {
-    --bg-color: #27272a; /* אפור פחם */
+    --bg-color: #27272a;           /* אפור פחם לרקע הכללי */
     --text-color: #ffffff;
-    --accent-color: #fbbf24; /* זהב בוהק */
+    --sub-text-color: #e9d5ff;     /* סגול בהיר מאוד */
+    --accent-color: #ffd700;       /* זהב טהור */
     
-    /* רקע מלכותי - סגול עמוק מאוד */
+    /* גרדיאנט סגול מלכותי */
     --frame-bg: linear-gradient(135deg, #3b0764 0%, #1e1b4b 100%);
     
     --card-bg: rgba(0, 0, 0, 0.6); /* כהה ושקוף יותר */
+    
+    --clock-bg: rgba(59, 7, 100, 0.8);
+    --footer-bg: rgba(20, 10, 40, 0.95);
 }
 
-/* אפקט זוהר לזהב */
-h1 {
-    text-shadow: 0 0 10px rgba(251, 191, 36, 0.5);
-}
-
-.frame {
-    border-color: #ffd700; /* מסגרת זהב טהור */
+/* תוספת קטנה ייחודית לזהב: צללית זוהרת לטקסט */
+h1, .time-value {
+    text-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
 }

@@ -7,6 +7,7 @@ const READERS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRpQmb6
 const NEWS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRpQmb6-3vOGGYVVkQWQpHbGr5hp7NwRmDgwAw7b8zwoB5Tk3MJrVZReEet5CfcNSTTUBlIUq2ASOUd/pub?gid=1737085330&single=true&output=csv';
 const SLIDE_DURATION = 10000; 
 const REFRESH_INTERVAL = 5 * 60 * 1000; 
+const PURIM_THEMES = ['modern', 'dark', 'classic', 'gold', 'light'];
 // ==========================================
 
 // קריאת מכפיל המהירות מה-URL
@@ -407,44 +408,63 @@ async function showSlide(index) {
         slides = document.querySelectorAll('.slide');
     }
 
-    // --- הוספה עבור פורים: לוגיקת האפקטים ---
+    // --- בדיקת גלישה (סוף מצגת) ---
     if (index >= slides.length) {
         index = 0; // חזרה להתחלה
         
-        // כאן נכנס הקסם של פורים
+        // --- לוגיקת פורים ---
         if (isPurimMode) {
             cycleCount++;
-            // איפוס: מנקים אפקטים קודמים
+            
+            // 1. החלפת Theme (קורה בכל סיבוב!)
+            // בוחרים theme אקראי מתוך הרשימה שהגדרנו למעלה
+            const randomTheme = PURIM_THEMES[Math.floor(Math.random() * PURIM_THEMES.length)];
+            const themeLink = document.getElementById('theme-link');
+            if (themeLink) {
+                themeLink.href = `css/themes/${randomTheme}.css`;
+                console.log(`Purim Theme Swapped: ${randomTheme}`);
+            }
+
+            // 2. אפקטים משוגעים (קורה רק בסיבובים אי-זוגיים)
+            // קודם כל מנקים אפקטים קודמים
             document.body.classList.remove('purim-mirror', 'purim-upside', 'purim-invert', 'purim-drunk');
 
-            // רק במחזורים אי-זוגיים מפעילים אפקט
             if (cycleCount % 2 !== 0) {
                 const effects = ['purim-mirror', 'purim-upside', 'purim-invert', 'purim-drunk'];
                 const randomEffect = effects[Math.floor(Math.random() * effects.length)];
                 document.body.classList.add(randomEffect);
             }
         }
+        // ---------------------
     }
-    // ---------------------------------------
 
     currentSlideIndex = index;
 
+    // ... (שאר הפונקציה נשאר אותו דבר בדיוק) ...
     slides.forEach(s => s.classList.remove('active'));
     const currentSlideEl = slides[currentSlideIndex];
     currentSlideEl.classList.add('active');
 
     let rawDuration = parseInt(currentSlideEl.getAttribute('data-duration'));
     if (!rawDuration || isNaN(rawDuration)) rawDuration = SLIDE_DURATION;
-    const duration = rawDuration / SPEED_FACTOR;
+
+    // חישוב המהירות (Speed Factor)
+    // הערה: וודא ש-SPEED_FACTOR מוגדר למעלה בקובץ, אם לא - תגדיר אותו כ-1
+    const factor = (typeof SPEED_FACTOR !== 'undefined') ? SPEED_FACTOR : 1;
+    let duration = rawDuration / factor;
+
     startAutoScroll(currentSlideEl, duration);
 
     const bar = document.getElementById('progress');
-    bar.style.transition = 'none';
-    bar.style.width = '0%';
-    setTimeout(() => {
-        bar.style.transition = `width ${duration}ms linear`; 
-        bar.style.width = '100%';
-    }, 50);
+    if (bar) {
+        bar.style.transition = 'none';
+        bar.style.width = '0%';
+        void bar.offsetWidth; 
+        setTimeout(() => {
+            bar.style.transition = `width ${duration}ms linear`; 
+            bar.style.width = '100%';
+        }, 50);
+    }
 
     slideTimer = setTimeout(nextSlide, duration);
 }

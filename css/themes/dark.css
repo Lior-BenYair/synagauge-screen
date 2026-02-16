@@ -1,10 +1,13 @@
 /* css/themes/dark.css */
-
 :root {
-    --bg-color: #0f172a;
-    --text-color: #f1f5f9;
-    --accent-color: #fbbf24;
-    /* הגדרת רקע למסגרת (יכול להיות צבע או גרדיאנט) */
-    --frame-bg: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-    --card-bg: rgba(30, 41, 59, 0.9);
+    --bg-color: #111111;           /* שחור כמעט מלא */
+    --text-color: #e2e8f0;         /* לבן שבור */
+    --sub-text-color: #94a3b8;     /* אפור בינוני */
+    --accent-color: #38bdf8;       /* תכלת (במקום זהב) */
+    
+    --frame-bg: #1e293b;           /* רקע אחיד כהה למסגרת */
+    --card-bg: #334155;            /* רקע אחיד לכרטיסיות */
+    
+    --clock-bg: #0f172a;
+    --footer-bg: #0f172a;
 }
