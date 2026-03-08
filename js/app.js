@@ -480,7 +480,8 @@ function updateClock() {
     const timeString = now.toLocaleTimeString('he-IL', { 
         hour12: false, 
         hour: '2-digit', 
-        minute: '2-digit' 
+        minute: '2-digit',
+        second: '2-digit'
     });
     const clockEl = document.getElementById('digital-clock');
     if (clockEl) clockEl.innerText = timeString;
