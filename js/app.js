@@ -170,178 +170,194 @@ async function buildDynamicSlides() {
 
 async function loadShabbatTimes() {
     try {
-        // --- הגדרות בסיס ---
-        const now = getSystemDate();
-        const gy = now.getFullYear();
-        const gm = String(now.getMonth() + 1).padStart(2, '0'); 
-        const gd = String(now.getDate()).padStart(2, '0');
-        const todayDateISO = gy + "-" + gm + "-" + gd;
-
-        const baseUrl = `https://www.hebcal.com/shabbat?cfg=json&geonameid=6693679&M=on&lg=he&o=on`;
-        const dateParams = `&gy=${gy}&gm=${gm}&gd=${gd}`; 
+        const now = getSystemDate(); 
+        const getISO = (d) => d.toISOString().split('T')[0];
         
-        const response = await fetch(baseUrl + dateParams); 
-        const data = await response.json();
-
-        // 1. מיון
-        data.items.sort((a, b) => new Date(a.date) - new Date(b.date));
-
-
-        // =================================================================
-        // שלב 2: בחירת הכותרת הראשית (הקדמנו את השלב הזה!)
-        // =================================================================
+        // --- מערכת סימולציית שעות ---
+        const urlParams = new URLSearchParams(window.location.search);
+        const timeParam = urlParams.get('time'); 
+        if (timeParam) {
+            const [hours, minutes] = timeParam.split(':');
+            now.setHours(parseInt(hours, 10), parseInt(minutes || 0, 10), 0);
+            console.log(`⏱️ Simulation Mode: Time forced to ${timeParam}`);
+        }
         
-        // סינון מועמדים לכותרת
-        const titleCandidates = data.items.filter(item => {
+        // --- שלב 1: בדיקת שקיעה ---
+        const initialZmanimUrl = `https://www.hebcal.com/zmanim?cfg=json&geonameid=6693679&date=${getISO(now)}`;
+        const initialZmanimRes = await fetch(initialZmanimUrl);
+        const initialZmanimData = await initialZmanimRes.json();
+        
+        const sunset = new Date(initialZmanimData.times.sunset);
+        let targetDate = new Date(now);
+
+        const isAfterSunset = now > sunset;
+        if (isAfterSunset) {
+            targetDate.setDate(now.getDate() + 1);
+            console.log("After sunset: Switching to tomorrow's data...");
+        }
+        
+        const todayISO = getISO(targetDate);
+
+        // --- שלב 2: קריאה מאוחדת ---
+        const fetchStart = new Date(targetDate);
+        fetchStart.setDate(fetchStart.getDate() - 3); 
+        const fetchEnd = new Date(targetDate);
+        fetchEnd.setDate(fetchEnd.getDate() + 9); 
+
+        const hebcalUrl = `https://www.hebcal.com/hebcal?v=1&cfg=json&geonameid=6693679&lg=he&s=on&maj=on&min=on&nx=on&ss=on&mod=on&mf=on&o=on&M=on&m=50&c=on&b=18&start=${getISO(fetchStart)}&end=${getISO(fetchEnd)}`;
+        const hebcalRes = await fetch(hebcalUrl);
+        const hebcalData = await hebcalRes.json();
+
+        // --- שלב 3: המרת תאריך עברי ---
+        const convUrl = `https://www.hebcal.com/converter?cfg=json&date=${todayISO}&g2h=1&strict=1`;
+        const convRes = await fetch(convUrl);
+        const convData = await convRes.json();
+
+        // --- עיבוד נתונים ---
+        const cleanHebDate = convData.hebrew.replace(/[\u0591-\u05C7]/g, '');
+        const dayName = new Intl.DateTimeFormat('he-IL', { weekday: 'long' }).format(targetDate);
+        document.getElementById('hebrew-date-display').innerText = `${dayName}, ${cleanHebDate}`;
+
+        // == סינון כותרת ראשית ==
+        const titleCandidates = hebcalData.items.filter(item => {
             const itemDate = item.date.substring(0, 10);
-            if (itemDate < todayDateISO) return false;
+            if (itemDate < todayISO) return false; 
 
             const isParasha = item.category === "parashat";
-            const isMajorHoliday = item.category === "holiday" && item.subcat === "major";
-            const isCholHamoedShabbat = item.category === "holiday" && item.hebrew.includes("חול המועד") && item.subcat === "shabbat";
-
+            const isCholHamoedText = item.hebrew.includes("חול המועד") || item.hebrew.includes("חוה");
+            const isMajorHoliday = item.category === "holiday" && item.subcat === "major" && !isCholHamoedText;
+            const isCholHamoedShabbat = item.category === "holiday" && item.subcat === "shabbat" && isCholHamoedText;
+            
             return isParasha || isMajorHoliday || isCholHamoedShabbat;
         });
 
-        // בחירת האירוע הראשי בפועל
-        let mainItem = null;
         let titleText = "ברוכים הבאים";
-        let isMainTitleParasha = false; 
-        let isMajorHoliday = false;
-
+        let mainItem = null;
         if (titleCandidates.length > 0) {
             mainItem = titleCandidates[0];
             titleText = mainItem.hebrew;
-            
-            // בדיקה האם הכותרת היא פרשה
-            isMainTitleParasha = (mainItem.category === "parashat");
-            
-            // בדיקה האם זה חג גדול (לצורך שינוי נרות/הבדלה)
-            isMajorHoliday = (mainItem.category === "holiday" && mainItem.subcat === "major");
 
-            // תיקוני טקסט
-            if (titleText.includes("פסח") && (titleText.includes("חוה") || titleText.includes("חול המועד"))) {
-                titleText = "שבת חול המועד פסח";
-            }
-            if (titleText.includes("סוכות") && (titleText.includes("חוה") || titleText.includes("חול המועד"))) {
-                titleText = "שבת חול המועד סוכות";
+            const normalizedTitle = titleText.replace(/[׳`´]/g, "'");
+            const corrections = {
+                "פסח ז'": "שביעי של פסח",
+                "פסח ח'": "אחרון של פסח",
+                "סוכות א'": "חג הסוכות",
+                "שבועות א'": "חג השבועות",
+                "פסח א'": "חג הפסח"
+            };
+            
+            if (corrections[normalizedTitle]) {
+                titleText = corrections[normalizedTitle];
+            } else if (mainItem.subcat === "shabbat") {
+                const isCholHamoedText = titleText.includes("חול המועד") || titleText.includes("חוה");
+                if (titleText.includes("פסח") && isCholHamoedText) {
+                    titleText = "שבת חול המועד פסח";
+                }
+                if (titleText.includes("סוכות") && isCholHamoedText) {
+                    titleText = "שבת חול המועד סוכות";
+                }
             }
         }
-
-        // עדכון התצוגה של הכותרת
         document.getElementById('parasha-name').innerText = titleText;
-        
-        if (isMajorHoliday) {
-            document.getElementById('label-candles').innerText = "כניסת החג:";
-            document.getElementById('label-havdalah').innerText = "יציאת החג:";
-        } else {
-            document.getElementById('label-candles').innerText = "כניסת שבת:";
-            document.getElementById('label-havdalah').innerText = "יציאת שבת:";
-        }
 
-
-        // =================================================================
-        // שלב 3: בניית רשימת התוספות (Special Events)
-        // =================================================================
-        
+        // == פס צהוב (אירועי היום) ==
         let specialAdditions = [];
+        const mainItemDateISO = mainItem ? mainItem.date.substring(0, 10) : null;
 
-        // א. שבתות מיוחדות ומברכים
-        data.items.forEach(item => {
+        hebcalData.items.forEach(item => {
             const itemDate = item.date.substring(0, 10);
-            if (itemDate < todayDateISO) return;
-
-            // בדיקת מברכים (תמיד מציגים)
-            if (item.category === "mevarchim") {
-                specialAdditions.push(item.hebrew);
+            const isCholHamoedText = item.hebrew.includes("חול המועד") || item.hebrew.includes("חוה");
+            
+            if (itemDate === todayISO) {
+                if (item.category === "omer") {
+                    specialAdditions.push(`${item.title} (${dayName})`);
+                }
+                if (item.category === "roshchodesh") specialAdditions.push(item.hebrew);
+                if (item.category === "holiday" && (!mainItem || mainItem.hebrew !== item.hebrew)) specialAdditions.push(item.hebrew);
             }
-
-            // בדיקת שבת מיוחדת (שקלים, שובה וכו')
-            if (item.category === "holiday" && item.subcat === "shabbat" && !item.hebrew.includes("חול המועד")) {
-                if (isMainTitleParasha) {
+            
+            if (itemDate >= todayISO) {
+                if (item.category === "mevarchim") {
+                    if (mainItemDateISO && itemDate <= mainItemDateISO) specialAdditions.push(item.hebrew);
+                }
+                if (item.category === "holiday" && item.subcat === "shabbat" && mainItem?.category === "parashat" && !isCholHamoedText) {
                     specialAdditions.push(item.hebrew);
                 }
             }
         });
+        document.getElementById('special-day-text').innerText = [...new Set(specialAdditions)].join(" | ");
 
+        // == מציאת נרות והבדלה ותוויות חכמות ==
+        let candles = null;
+        let havdalah = null;
+        let labelCandles = "כניסת שבת:";
+        let labelHavdalah = "יציאת שבת:";
 
-        // ב. אירועים של היום (ספירת העומר, ראש חודש...)
-        data.items.forEach(item => {
-             const itemDate = item.date.substring(0, 10);
-             if (itemDate === todayDateISO) {
-                
-                if (item.category === "omer") specialAdditions.push(item.hebrew);
-                if (item.category === "roshchodesh") specialAdditions.push(item.hebrew);
-                
-                // חגים קטנים
-                if (item.category === "holiday" && 
-                    item.subcat !== "major" && 
-                    item.subcat !== "shabbat" &&
-                    item !== mainItem) { 
-                    
-                    if (!specialAdditions.includes(item.hebrew)) {
-                        specialAdditions.push(item.hebrew);
-                    }
-                }
-             }
-        });
-
-        // =================================================================
-        // שלב 4: הצגת התוספות
-        // =================================================================
-        const uniqueSpecialEvents = [...new Set(specialAdditions)];
-        document.getElementById('special-day-text').innerText = uniqueSpecialEvents.join(" | ");
-
-
-        // =================================================================
-        // שלב 5: תאריך וזמנים (כרגיל)
-        // =================================================================
-        try {
-            const dateRes = await fetch(`https://www.hebcal.com/converter?cfg=json&date=${todayDateISO}&g2h=1&strict=1`);
-            const dateData = await dateRes.json();
-            const cleanDate = dateData.hebrew.replace(/[\u0591-\u05C7]/g, ''); 
-            const dayName = new Intl.DateTimeFormat('he-IL', { weekday: 'long' }).format(now);
-            document.getElementById('hebrew-date-display').innerText = `${dayName}, ${cleanDate}`;
-        } catch (err) { console.log("Date error"); }
-
-        const candles = data.items.find(i => i.category === "candles");
-        const havdalah = data.items.find(i => i.category === "havdalah");
-
-        if(candles) {
-            const d = new Date(candles.date);
-            document.getElementById('candles-time').innerText = d.toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'});
-        }
-        if(havdalah) {
-            const d = new Date(havdalah.date);
-            document.getElementById('havdalah-time').innerText = d.toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'});
-        }
-
-        const zmanimUrl = `https://www.hebcal.com/zmanim?cfg=json&geonameid=6693679&date=${todayDateISO}`;
-        const zmanimRes = await fetch(zmanimUrl);
-        const zmanimData = await zmanimRes.json();
-
-        if (zmanimData.times) {
-            const formatTime = (iso) => new Date(iso).toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'});
-            const sofZmanGra = formatTime(zmanimData.times.sofZmanShma);
-            const sofZmanMga = formatTime(zmanimData.times.sofZmanShmaMGA);
+        if (mainItem) {
+            const mainDateStr = mainItem.date.substring(0, 10);
             
-            const footerEl = document.getElementById('footer-text');
-            if (footerEl) {
-                 footerEl.innerHTML = `סוף זמן קריאת שמע (גר"א): <span style="color:var(--accent-color)">${sofZmanGra}</span> &nbsp;|&nbsp; (מג"א): <span style="color:var(--accent-color)">${sofZmanMga}</span>`;
+            // נרות: חיפוש כל ההדלקות שקרו לפני או ביום האירוע הראשי, ולקיחת האחרונה מביניהן
+            const pastOrPresentCandles = hebcalData.items.filter(i => i.category === "candles" && i.date.substring(0, 10) <= mainDateStr);
+            if (pastOrPresentCandles.length > 0) {
+                candles = pastOrPresentCandles[pastOrPresentCandles.length - 1];
+            }
+
+            // הבדלה: חיפוש כל ההבדלות שיקרו אחרי או ביום האירוע הראשי, ולקיחת הראשונה מביניהן
+            const futureOrPresentHavdalah = hebcalData.items.filter(i => i.category === "havdalah" && i.date.substring(0, 10) >= mainDateStr);
+            if (futureOrPresentHavdalah.length > 0) {
+                havdalah = futureOrPresentHavdalah[0];
+            }
+
+            // עדכון תוויות חכם לפי היום בשבוע
+            const isMajorHoliday = mainItem.category === "holiday" && mainItem.subcat === "major";
+            
+            if (candles) {
+                const cDate = new Date(candles.date);
+                // אם ההדלקה לא בשישי (5) או שהאירוע הוא חג
+                if (cDate.getDay() !== 5 || isMajorHoliday) {
+                    labelCandles = "כניסת החג:";
+                } else {
+                    labelCandles = "כניסת שבת:";
+                }
+            }
+
+            if (havdalah) {
+                const hDate = new Date(havdalah.date);
+                // אם ההבדלה יוצאת במוצאי שבת (6), זה תמיד צאת השבת!
+                if (hDate.getDay() === 6) {
+                    labelHavdalah = "יציאת שבת:";
+                } else {
+                    labelHavdalah = "יציאת החג:";
+                }
             }
         }
+        
+        document.getElementById('label-candles').innerText = labelCandles;
+        document.getElementById('label-havdalah').innerText = labelHavdalah;
 
-        // --- הוספה עבור פורים: בדיקה אם זה פורים ---
+        if (candles) document.getElementById('candles-time').innerText = new Date(candles.date).toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'});
+        if (havdalah) document.getElementById('havdalah-time').innerText = new Date(havdalah.date).toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'});
+
+        // == זמני קריאת שמע ==
+        let zmanimToDisplay = initialZmanimData;
+        if (isAfterSunset) {
+            const finalZmanimRes = await fetch(`https://www.hebcal.com/zmanim?cfg=json&geonameid=6693679&date=${todayISO}`);
+            zmanimToDisplay = await finalZmanimRes.json();
+        }
+
+        const formatZman = (iso) => new Date(iso).toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'});
+        const footerEl = document.getElementById('footer-text');
+        if (footerEl && zmanimToDisplay.times) {
+            footerEl.innerHTML = `סוף זמן קריאת שמע (גר"א): <span style="color:var(--accent-color)">${formatZman(zmanimToDisplay.times.sofZmanShma)}</span> &nbsp;|&nbsp; (מג"א): <span style="color:var(--accent-color)">${formatZman(zmanimToDisplay.times.sofZmanShmaMGA)}</span>`;
+        }
+
         const titleCheck = document.getElementById('parasha-name').innerText;
         const specialCheck = document.getElementById('special-day-text').innerText;
-        
-        if (specialCheck.includes("שבת זכור")) {
+        if (specialCheck.includes("שבת זכור") || titleCheck.includes("פורים") || specialCheck.includes("פורים")) {
             isPurimMode = true;
-            console.log("Purim Mode: ACTIVATED 🎭");
         }
-        // isPurimMode = true; // לבדיקות בלבד - בטל הערה זו כדי לכפות מצב פורים
 
-    } catch(e) { console.log("Hebcal error", e); }
+    } catch(e) { console.error("Optimization Error:", e); }
 }
 
 
