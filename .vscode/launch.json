@@ -1,0 +1,17 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "chrome",
+            "request": "launch",
+            "name": "Launch Synagogue Board",
+            "url": "http://localhost:5500/?speed=1",
+            "webRoot": "${workspaceFolder}",
+            "runtimeArgs": [
+                "--app=http://localhost:5500/?speed=1",
+                "--window-size=930,539",
+                "--window-position=0,0"
+            ]
+        }
+    ]
+}

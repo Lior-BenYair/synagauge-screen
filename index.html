@@ -12,9 +12,23 @@
     
     <script defer src="js/utils.js"></script>
     <script defer src="js/app.js"></script>
+    <script src="js/dev-menu.js"></script>
 </head>
 <body>
-
+<div id="dev-menu" style="display: none; position: fixed; top: 20px; left: 20px; background: rgba(0,0,0,0.85); color: white; padding: 15px; border-radius: 8px; z-index: 9999; border: 1px solid #ffcc00; direction: rtl; font-family: sans-serif; box-shadow: 0 4px 10px rgba(0,0,0,0.5);">
+    <h3 style="margin-top: 0; color: #ffcc00; font-size: 1.2rem;">🛠️ תפריט מפתחים</h3>
+    
+    <label style="font-size: 0.9rem;">תאריך סימולציה:</label><br>
+    <input type="date" id="dev-date" style="margin-bottom: 10px; padding: 5px; width: 100%; box-sizing: border-box; color: black;"><br>
+    
+    <label style="font-size: 0.9rem;">שעת סימולציה:</label><br>
+    <input type="time" id="dev-time" style="margin-bottom: 15px; padding: 5px; width: 100%; box-sizing: border-box; color: black;"><br>
+    
+    <button id="dev-apply" style="padding: 8px 12px; background: #ffcc00; color: black; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">החל ורענן</button>
+    <button id="dev-close" style="padding: 8px 12px; background: #cc0000; color: white; border: none; border-radius: 4px; cursor: pointer; margin-right: 5px;">סגור</button>
+    
+    <div style="font-size: 0.75rem; margin-top: 10px; color: #aaa;">לחץ 'D' במקלדת כדי להסתיר/להציג</div>
+</div>
 <div id="loader">טוען נתונים...</div>
 
 <div class="frame" id="main-frame">
