@@ -198,7 +198,14 @@ async function loadShabbatTimes() {
         
         const todayISO = getISO(targetDate);
 
-        // --- שלב 2: קריאה מאוחדת ---
+        // --- שלב 1.5: קריאת זמני היום האפקטיבי (הוקדם כדי שישמש את שעות הצום) ---
+        let zmanimToDisplay = initialZmanimData;
+        if (isAfterSunset) {
+            const finalZmanimRes = await fetch(`https://www.hebcal.com/zmanim?cfg=json&geonameid=6693679&date=${todayISO}`);
+            zmanimToDisplay = await finalZmanimRes.json();
+        }
+
+        // --- שלב 2: קריאה מאוחדת ל-API ---
         const fetchStart = new Date(targetDate);
         fetchStart.setDate(fetchStart.getDate() - 3); 
         const fetchEnd = new Date(targetDate);
@@ -260,15 +267,21 @@ async function loadShabbatTimes() {
         }
         document.getElementById('parasha-name').innerText = titleText;
 
-        // == פס צהוב (אירועי היום) ==
+        // == פס צהוב (אירועי היום וזיהוי צום) ==
         let specialAdditions = [];
         const mainItemDateISO = mainItem ? mainItem.date.substring(0, 10) : null;
+        let isMinorFastToday = false;
 
         hebcalData.items.forEach(item => {
             const itemDate = item.date.substring(0, 10);
             const isCholHamoedText = item.hebrew.includes("חול המועד") || item.hebrew.includes("חוה");
             
             if (itemDate === todayISO) {
+                // בדיקת צום (למעט תשעה באב שמתחיל בערב)
+                if (item.category === "holiday" && item.subcat === "fast" && !item.hebrew.includes("באב")) {
+                    isMinorFastToday = true;
+                }
+
                 if (item.category === "omer") {
                     specialAdditions.push(`${item.title} (${dayName})`);
                 }
@@ -296,39 +309,52 @@ async function loadShabbatTimes() {
         if (mainItem) {
             const mainDateStr = mainItem.date.substring(0, 10);
             
-            // נרות: חיפוש כל ההדלקות שקרו לפני או ביום האירוע הראשי, ולקיחת האחרונה מביניהן
             const pastOrPresentCandles = hebcalData.items.filter(i => i.category === "candles" && i.date.substring(0, 10) <= mainDateStr);
             if (pastOrPresentCandles.length > 0) {
                 candles = pastOrPresentCandles[pastOrPresentCandles.length - 1];
             }
 
-            // הבדלה: חיפוש כל ההבדלות שיקרו אחרי או ביום האירוע הראשי, ולקיחת הראשונה מביניהן
             const futureOrPresentHavdalah = hebcalData.items.filter(i => i.category === "havdalah" && i.date.substring(0, 10) >= mainDateStr);
             if (futureOrPresentHavdalah.length > 0) {
                 havdalah = futureOrPresentHavdalah[0];
             }
 
-            // עדכון תוויות חכם לפי היום בשבוע
             const isMajorHoliday = mainItem.category === "holiday" && mainItem.subcat === "major";
             
             if (candles) {
                 const cDate = new Date(candles.date);
-                // אם ההדלקה לא בשישי (5) או שהאירוע הוא חג
-                if (cDate.getDay() !== 5 || isMajorHoliday) {
-                    labelCandles = "כניסת החג:";
-                } else {
-                    labelCandles = "כניסת שבת:";
-                }
+                if (cDate.getDay() !== 5 || isMajorHoliday) labelCandles = "כניסת החג:";
+                else labelCandles = "כניסת שבת:";
             }
 
             if (havdalah) {
                 const hDate = new Date(havdalah.date);
-                // אם ההבדלה יוצאת במוצאי שבת (6), זה תמיד צאת השבת!
-                if (hDate.getDay() === 6) {
-                    labelHavdalah = "יציאת שבת:";
-                } else {
-                    labelHavdalah = "יציאת החג:";
+                if (hDate.getDay() === 6) labelHavdalah = "יציאת שבת:";
+                else labelHavdalah = "יציאת החג:";
+            }
+        }
+
+        // --- הדרסת התוויות עבור צום קטן ---
+        if (isMinorFastToday && zmanimToDisplay && zmanimToDisplay.times) {
+            const isFriday = targetDate.getDay() === 5;
+            
+            if (isFriday) {
+                // מקרה קצה (עשרה בטבת בשישי): צד ימין תחילת צום, צד שמאל כניסת שבת
+                const originalCandles = candles; 
+                labelCandles = "תחילת הצום:";
+                candles = { date: zmanimToDisplay.times.alotHaShachar };
+                
+                if (originalCandles) {
+                    labelHavdalah = "כניסת שבת:";
+                    havdalah = originalCandles;
                 }
+            } else {
+                // יום חול רגיל: כניסת צום וצאת צום
+                labelCandles = "תחילת הצום:";
+                candles = { date: zmanimToDisplay.times.alotHaShachar };
+                
+                labelHavdalah = "צאת הצום:";
+                havdalah = { date: zmanimToDisplay.times.tzeit85deg }; // צאת הכוכבים המאוחר
             }
         }
         
@@ -339,12 +365,6 @@ async function loadShabbatTimes() {
         if (havdalah) document.getElementById('havdalah-time').innerText = new Date(havdalah.date).toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'});
 
         // == זמני קריאת שמע ==
-        let zmanimToDisplay = initialZmanimData;
-        if (isAfterSunset) {
-            const finalZmanimRes = await fetch(`https://www.hebcal.com/zmanim?cfg=json&geonameid=6693679&date=${todayISO}`);
-            zmanimToDisplay = await finalZmanimRes.json();
-        }
-
         const formatZman = (iso) => new Date(iso).toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'});
         const footerEl = document.getElementById('footer-text');
         if (footerEl && zmanimToDisplay.times) {
