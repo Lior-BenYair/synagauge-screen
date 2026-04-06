@@ -61,4 +61,27 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('dev-menu').style.display = 'none';
         });
     }
+
+// --- חיבור כפתורי הבדיקה לאזעקות (קוראים לפונקציות מ-app.js) ---
+
+    const btnTriggerAlarm = document.getElementById('dev-trigger-alarm');
+    if (btnTriggerAlarm) {
+        btnTriggerAlarm.addEventListener('click', () => {
+            // מפעיל את הפונקציה הגלובלית שנמצאת ב-app.js
+            if (typeof showAlarmOverlay === 'function') {
+                showAlarmOverlay('ירי רקטות וטילים', 'מודיעין - מכבים - רעות', 'red', true);
+            } else {
+                console.error("showAlarmOverlay function not found in app.js");
+            }
+        });
+    }
+
+    const btnStopAlarm = document.getElementById('dev-stop-alarm');
+    if (btnStopAlarm) {
+        btnStopAlarm.addEventListener('click', () => {
+            if (typeof hideAlarmOverlay === 'function') {
+                hideAlarmOverlay();
+            }
+        });
+    }
 });

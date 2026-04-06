@@ -7,71 +7,86 @@
     
     <link rel="stylesheet" href="css/base.css">
     <link rel="stylesheet" href="css/purim.css">
-    
     <link id="theme-link" rel="stylesheet" href="css/themes/modern.css">
     
     <script defer src="js/utils.js"></script>
     <script defer src="js/app.js"></script>
-    <script src="js/dev-menu.js"></script>
+    <script defer src="js/dev-menu.js"></script>
 </head>
 <body>
-<div id="dev-menu" style="display: none; position: fixed; top: 20px; left: 20px; background: rgba(0,0,0,0.85); color: white; padding: 15px; border-radius: 8px; z-index: 9999; border: 1px solid #ffcc00; direction: rtl; font-family: sans-serif; box-shadow: 0 4px 10px rgba(0,0,0,0.5);">
-    <h3 style="margin-top: 0; color: #ffcc00; font-size: 1.2rem;">🛠️ תפריט מפתחים</h3>
     
-    <label style="font-size: 0.9rem;">תאריך סימולציה:</label><br>
-    <input type="date" id="dev-date" style="margin-bottom: 10px; padding: 5px; width: 100%; box-sizing: border-box; color: black;"><br>
-    
-    <label style="font-size: 0.9rem;">שעת סימולציה:</label><br>
-    <input type="time" id="dev-time" style="margin-bottom: 10px; padding: 5px; width: 100%; box-sizing: border-box; color: black;"><br>
-
-    <label style="font-size: 0.9rem;">מהירות סימולציה (Speed):</label><br>
-    <input type="number" id="dev-speed" min="1" step="1" placeholder="למשל: 10" style="margin-bottom: 15px; padding: 5px; width: 100%; box-sizing: border-box; color: black;"><br>
-    
-    <button id="dev-apply" style="padding: 8px 12px; background: #ffcc00; color: black; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">החל ורענן</button>
-    <button id="dev-close" style="padding: 8px 12px; background: #cc0000; color: white; border: none; border-radius: 4px; cursor: pointer; margin-right: 5px;">סגור</button>
-    
-    <div style="font-size: 0.75rem; margin-top: 10px; color: #aaa;">לחץ 'D' במקלדת כדי להסתיר/להציג</div>
-</div>
-<div id="loader">טוען נתונים...</div>
-
-<div class="frame" id="main-frame">
-    <img src="Yachad-Logo.png" class="logo" alt="לוגו">
-    <div id="digital-clock">--:--:--</div>
-    
-<div class="slide" id="slide-shabbat" data-duration="15000">
+    <div id="alarm-banner" style="position: fixed; bottom: 0; left: 0; width: 100%; height: 25vh; background-color: #d32f2f; color: white; display: flex; justify-content: space-between; align-items: center; padding: 0 40px; box-sizing: border-box; z-index: 100000; direction: rtl; font-family: sans-serif; transform: translateY(100%); transition: transform 0.5s ease-in-out; border-top: 6px solid #ffcc00; box-shadow: 0 -10px 20px rgba(0,0,0,0.4);">
         
-        <div class="shabbat-header">
-            <h1 id="parasha-name">טוען...</h1>
-            <h3 id="hebrew-date-display">...</h3>
-            
-            <h4 id="special-day-text"></h4>
+        <div style="display: flex; flex-direction: column; justify-content: center;">
+            <div id="alarm-title" style="font-size: 3rem; font-weight: bold; color: #ffcc00; margin-bottom: 5px;">סוג התראה</div>
+            <div id="alarm-zones" style="font-size: 2.2rem; font-weight: bold;">אזור התראה</div>
         </div>
 
-        <div class="times-container">
-            
-            <div class="time-block right-block">
-                <span class="time-label" id="label-candles">כניסת שבת</span>
-                <span id="candles-time" class="time-value">--:--</span>
-                <div class="icon-container">🕯️🕯️</div>
-            </div>
-
-            <div class="vertical-divider"></div>
-
-            <div class="time-block left-block">
-                <span class="time-label" id="label-havdalah">צאת שבת</span>
-                <span id="havdalah-time" class="time-value">--:--</span>
-                <div class="icon-container">✨</div>
-            </div>
+        <div id="alarm-test-badge" style="display: none; background: #ffcc00; color: black; padding: 10px 30px; border-radius: 10px; font-weight: bold; font-size: 1.5rem; text-align: center;">
+            ⚠️ סימולציה<br><span style="font-size: 1rem; font-weight: normal;">לא אזעקת אמת</span>
         </div>
-        
-
-        <div class="shabbat-footer" id="footer-text">
-            טוען נתונים...
-        </div>
-   
-
     </div>
-    <div class="progress-bar" id="progress"></div>
-</div>
+
+    <div id="dev-menu" style="display: none; position: fixed; top: 20px; left: 20px; background: rgba(0,0,0,0.85); color: white; padding: 15px; border-radius: 8px; z-index: 9999; border: 1px solid #ffcc00; direction: rtl; font-family: sans-serif; box-shadow: 0 4px 10px rgba(0,0,0,0.5);">
+        <h3 style="margin-top: 0; color: #ffcc00; font-size: 1.2rem;">🛠️ תפריט מפתחים</h3>
+        
+        <label style="font-size: 0.9rem;">תאריך סימולציה:</label><br>
+        <input type="date" id="dev-date" style="margin-bottom: 10px; padding: 5px; width: 100%; box-sizing: border-box; color: black;"><br>
+        
+        <label style="font-size: 0.9rem;">שעת סימולציה:</label><br>
+        <input type="time" id="dev-time" style="margin-bottom: 10px; padding: 5px; width: 100%; box-sizing: border-box; color: black;"><br>
+
+        <label style="font-size: 0.9rem;">מהירות סימולציה (Speed):</label><br>
+        <input type="number" id="dev-speed" min="1" step="1" placeholder="למשל: 10" style="margin-bottom: 15px; padding: 5px; width: 100%; box-sizing: border-box; color: black;"><br>
+        <hr style="border-color: #555; margin: 15px 0;">
+        <label style="font-size: 0.9rem; color: #ff4444;">🚨 בדיקת חירום:</label><br>
+        <button id="dev-trigger-alarm" style="padding: 8px 12px; background: #d32f2f; color: white; border: none; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold; margin-bottom: 10px;">הפעל אזעקת ניסיון</button>
+        <button id="dev-stop-alarm" style="padding: 8px 12px; background: #333; color: white; border: 1px solid #777; border-radius: 4px; cursor: pointer; width: 100%; margin-bottom: 15px;">עצור אזעקה / חזל"ש</button>
+        <button id="dev-apply" style="padding: 8px 12px; background: #ffcc00; color: black; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">החל ורענן</button>
+        <button id="dev-close" style="padding: 8px 12px; background: #cc0000; color: white; border: none; border-radius: 4px; cursor: pointer; margin-right: 5px;">סגור</button>
+        
+        <div style="font-size: 0.75rem; margin-top: 10px; color: #aaa;">לחץ 'D' במקלדת כדי להסתיר/להציג</div>
+    </div>
+
+    <div id="main-content" style="transition: transform 0.5s ease; height: 100vh;">
+        
+        <div id="loader">טוען נתונים...</div>
+
+        <div class="frame" id="main-frame">
+            <img src="Yachad-Logo.png" class="logo" alt="לוגו">
+            <div id="digital-clock">--:--:--</div>
+            
+            <div class="slide" id="slide-shabbat" data-duration="15000">
+                <div class="shabbat-header">
+                    <h1 id="parasha-name">טוען...</h1>
+                    <h3 id="hebrew-date-display">...</h3>
+                    <h4 id="special-day-text"></h4>
+                </div>
+
+                <div class="times-container">
+                    <div class="time-block right-block">
+                        <span class="time-label" id="label-candles">כניסת שבת</span>
+                        <span id="candles-time" class="time-value">--:--</span>
+                        <div class="icon-container">🕯️🕯️</div>
+                    </div>
+
+                    <div class="vertical-divider"></div>
+
+                    <div class="time-block left-block">
+                        <span class="time-label" id="label-havdalah">צאת שבת</span>
+                        <span id="havdalah-time" class="time-value">--:--</span>
+                        <div class="icon-container">✨</div>
+                    </div>
+                </div>
+                
+                <div class="shabbat-footer" id="footer-text">
+                    טוען נתונים...
+                </div>
+            </div>
+            <div class="progress-bar" id="progress"></div>
+        </div>
+        
+    </div>
+
 </body>
 </html>

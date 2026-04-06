@@ -560,3 +560,86 @@ async function init() {
 }
 
 init();
+
+// ==========================================
+// מערכת התראות פיקוד העורף - סנכרון מלא
+// ==========================================
+
+const ALARM_ZONES = ["מודיעין - מכבים - רעות"];
+const PROXY_URL = "https://oref-proxy.benyair-lior.workers.dev/"; // <--- ודא שהכתובת שלך כאן
+
+let isAlarmActive = false;
+
+async function fetchOrefAlerts() {
+    try {
+        const response = await fetch(PROXY_URL);
+        if (!response.ok) return;
+
+        const text = await response.text();
+        
+        // בדיקה אם יש בכלל נתונים (קובץ ריק = אין אזעקות בארץ)
+        const hasData = text && text.trim() !== "" && text.trim() !== "{}";
+        let activeInOurZone = false;
+        let alertCategory = 'התרעת פיקוד העורף';
+
+        if (hasData) {
+            try {
+                const alertData = JSON.parse(text);
+                if (alertData && alertData.data) {
+                    // בודק אם מודיעין מופיעה ברשימה
+                    activeInOurZone = alertData.data.some(zone => ALARM_ZONES.includes(zone));
+                    alertCategory = alertData.title || alertCategory;
+                }
+            } catch (e) {
+                console.error("JSON Parse Error");
+            }
+        }
+
+        // לוגיקת הצגה/הסתרה אוטומטית
+        if (activeInOurZone && !isAlarmActive) {
+            // האזעקה התחילה במודיעין - מקפיצים סרגל
+            showAlarmOverlay(alertCategory, ALARM_ZONES[0], 'red', false);
+            isAlarmActive = true;
+        } 
+        else if (!activeInOurZone && isAlarmActive) {
+            // האזעקה הסתיימה או הוסרה משרתי פיקוד העורף - מורידים סרגל
+            hideAlarmOverlay();
+            isAlarmActive = false;
+        }
+
+    } catch (error) {
+        // במקרה של שגיאת רשת, לא עושים כלום כדי לא להפריע למצגת
+        console.log("Fetch failed, retrying in next cycle...");
+    }
+}
+
+// הפונקציות לתצוגה (ודא שהן קיימות ב-app.js או utils.js)
+function showAlarmOverlay(title, zone, severity, isTest) {
+    const banner = document.getElementById('alarm-banner');
+    if (!banner) return;
+    
+    document.getElementById('alarm-title').innerText = title;
+    document.getElementById('alarm-zones').innerText = zone;
+    document.getElementById('alarm-test-badge').style.display = isTest ? 'block' : 'none';
+    
+    banner.style.transform = 'translateY(0)';
+    const mainContent = document.getElementById('main-content');
+    if (mainContent) {
+        mainContent.style.transform = 'scale(0.75)';
+        mainContent.style.transformOrigin = 'top center';
+    }
+}
+
+function hideAlarmOverlay() {
+    const banner = document.getElementById('alarm-banner');
+    if (!banner) return;
+    
+    banner.style.transform = 'translateY(100%)';
+    const mainContent = document.getElementById('main-content');
+    if (mainContent) {
+        mainContent.style.transform = 'scale(1)';
+    }
+}
+
+// התחלת דגימה רציפה כל 3 שניות
+setInterval(fetchOrefAlerts, 3000);
