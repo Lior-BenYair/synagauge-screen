@@ -34,7 +34,8 @@ document.addEventListener('DOMContentLoaded', () => {
             else urlParams.delete('time');
             
             // הדרך האגרסיבית והבטוחה לרענן: בניה מחדש של הכתובת המלאה
-            const newUrl = window.location.pathname + '?' + urlParams.toString();
+            // שורה חדשה עם פענוח הקידוד:
+            const newUrl = window.location.pathname + '?' + decodeURIComponent(urlParams.toString());
             window.location.href = newUrl;
         });
     }
