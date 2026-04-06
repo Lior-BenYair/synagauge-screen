@@ -547,9 +547,16 @@ async function init() {
     
     // התחלת המצגת
     showSlide(0); 
-    
-    // רענון מלא כל 4 שעות
-    setTimeout(() => location.reload(), 14400000); 
+
+    // --- מנגנון רענון לילי חסין-הירדמות (פועם כל דקה) ---
+    setInterval(() => {
+        const now = new Date();
+        // בודק אם השעה היא בדיוק 03:00 (ובין 0 ל-59 שניות)
+        if (now.getHours() === 3 && now.getMinutes() === 0) {
+            console.log("Nightly refresh triggered!");
+            window.location.reload(true);
+        }
+    }, 60000); // רץ כל 60,000 מילישניות (דקה אחת)
 }
 
 init();
