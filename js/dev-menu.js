@@ -12,6 +12,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 const urlParams = new URLSearchParams(window.location.search);
                 if (urlParams.get('date')) document.getElementById('dev-date').value = urlParams.get('date');
                 if (urlParams.get('time')) document.getElementById('dev-time').value = urlParams.get('time');
+                
+                // מילוי שדה המהירות
+                if (urlParams.get('speed')) {
+                    document.getElementById('dev-speed').value = urlParams.get('speed');
+                } else {
+                    document.getElementById('dev-speed').value = ''; // ניקוי במקרה שאין פרמטר
+                }
+
             } else {
                 devMenu.style.display = 'none';
             }
@@ -24,17 +32,23 @@ document.addEventListener('DOMContentLoaded', () => {
         btnApply.addEventListener('click', () => {
             const dateVal = document.getElementById('dev-date').value;
             const timeVal = document.getElementById('dev-time').value;
+            const speedVal = document.getElementById('dev-speed').value;
             
             const urlParams = new URLSearchParams(window.location.search);
             
+            // עדכון תאריך
             if (dateVal) urlParams.set('date', dateVal);
             else urlParams.delete('date');
             
+            // עדכון שעה
             if (timeVal) urlParams.set('time', timeVal);
             else urlParams.delete('time');
+
+            // עדכון מהירות
+            if (speedVal) urlParams.set('speed', speedVal);
+            else urlParams.delete('speed');
             
-            // הדרך האגרסיבית והבטוחה לרענן: בניה מחדש של הכתובת המלאה
-            // שורה חדשה עם פענוח הקידוד:
+            // רענון בטוח עם קידוד תקין כדי שהשעה תישאר יפה ב-URL
             const newUrl = window.location.pathname + '?' + decodeURIComponent(urlParams.toString());
             window.location.href = newUrl;
         });

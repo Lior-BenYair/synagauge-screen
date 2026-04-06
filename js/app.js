@@ -3,7 +3,7 @@
 // ==========================================
 // הגדרות
 // ==========================================
-const READERS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRpQmb6-3vOGGYVVkQWQpHbGr5hp7NwRmDgwAw7b8zwoB5Tk3MJrVZReEet5CfcNSTTUBlIUq2ASOUd/pub?gid=0&single=true&output=csv';
+const LISTS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRpQmb6-3vOGGYVVkQWQpHbGr5hp7NwRmDgwAw7b8zwoB5Tk3MJrVZReEet5CfcNSTTUBlIUq2ASOUd/pub?gid=0&single=true&output=csv';
 const NEWS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRpQmb6-3vOGGYVVkQWQpHbGr5hp7NwRmDgwAw7b8zwoB5Tk3MJrVZReEet5CfcNSTTUBlIUq2ASOUd/pub?gid=1737085330&single=true&output=csv';
 const SLIDE_DURATION = 10000; 
 const REFRESH_INTERVAL = 5 * 60 * 1000; 
@@ -48,7 +48,7 @@ async function buildDynamicSlides() {
 
     // --- טעינת רשימות ---
     try {
-        const listData = await fetchCSV(READERS_CSV_URL);
+        const listData = await fetchCSV(LISTS_CSV_URL);
         
         if (listData.length > 0) {
             let slidesContent = [];
@@ -78,6 +78,9 @@ async function buildDynamicSlides() {
                     // ignore
                 }
                 else {
+                    // this is a real line with role and name.
+                    // if the name is missing, we can skip it.
+                    if (!col2) return;
                     currentSlide.items.push({ role: col1, name: col2 });
                 }
             });
@@ -264,6 +267,11 @@ async function loadShabbatTimes() {
                     titleText = "שבת חול המועד סוכות";
                 }
             }
+        }
+
+        // remove the word "פרשת" if it exists and the title is too long
+        if (titleText.startsWith("פרשת") && titleText.length > 10) {
+            titleText = titleText.replace("פרשת", "").trim();
         }
         document.getElementById('parasha-name').innerText = titleText;
 
