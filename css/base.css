@@ -73,7 +73,7 @@ h4#special-day-text {
     color: var(--accent-color);
     font-weight: bold;
     min-height: 1.5em;
-    margin-top: 5px;
+    margin-top: -15px;
     margin-bottom: 25px;
     line-height: 1.4;
 }
@@ -263,7 +263,7 @@ h3#hebrew-date-display {
 }
 
 .time-value {
-    font-size: 8em; /* ענק! */
+    font-size: 7em; /* ענק! */
     font-weight: 700;
     line-height: 1;
     font-variant-numeric: tabular-nums;
@@ -291,7 +291,7 @@ h3#hebrew-date-display {
     bottom: 0;
     left: 0;
     width: 100%;
-    height: 15%; /* גובה קבוע */
+    height: 17%; /* גובה קבוע */
     
     display: flex;
     justify-content: center;
@@ -301,7 +301,7 @@ h3#hebrew-date-display {
     border-top: 1px solid var(--accent-color);
     color: var(--accent-color);
     
-    font-size: 1.4em;
+    font-size: 1.6em;
     font-weight: bold;
     z-index: 10;
 }
