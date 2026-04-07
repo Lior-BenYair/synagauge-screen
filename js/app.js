@@ -560,3 +560,136 @@ async function init() {
 }
 
 init();
+
+// ==========================================
+// מערכת התראות פיקוד העורף - סנכרון מלא
+// ==========================================
+
+const ALARM_ZONES = ["מודיעין - מכבים - רעות", "מודיעין מכבים רעות"];
+const PROXY_URL = "https://oref-proxy.benyair-lior.workers.dev/"; // <--- ודא שהכתובת שלך כאן
+
+let isAlarmActive = false;
+
+async function fetchOrefAlerts() {
+    try {
+        const response = await fetch(PROXY_URL);
+        if (!response.ok) return;
+
+        const text = await response.text();
+        
+        // בדיקה בסיסית אם יש בכלל נתונים (קובץ ריק או סוגריים ריקים = אין אזעקות)
+        const hasData = text && text.trim() !== "" && text.trim() !== "{}";
+        
+        let foundZone = "";      // השם שנמצא בפועל ב-API
+        let alertCategory = 'התרעת פיקוד העורף';
+        let alertDesc = "";      // תוכן שדה ה-desc (הנחיות)
+
+        if (hasData) {
+            try {
+                const alertData = JSON.parse(text);
+                
+                // בפיקוד העורף המידע על האזורים נמצא תחת המערך alertData.data
+                if (alertData && alertData.data) {
+                    // מחפשים האם אחד מהשמות במערך ה-ALARM_ZONES שלנו קיים בנתוני האמת
+                    const matchedZone = alertData.data.find(zone => ALARM_ZONES.includes(zone));
+                    
+                    if (matchedZone) {
+                        foundZone = matchedZone;           // לוקחים את השם המדויק מה-API
+                        alertCategory = alertData.title || alertCategory;
+                        alertDesc = alertData.desc || "";  // שואבים את ההנחיה (למשל: "היכנסו למרחב המוגן")
+                    }
+                }
+            } catch (e) {
+                console.error("JSON Parse Error in Oref Fetch");
+            }
+        }
+
+        // --- לוגיקת הצגה/הסתרה אוטומטית ---
+        
+        if (foundZone && !isAlarmActive) {
+            // התחילה אזעקה חדשה - מציגים את הסרגל
+            showAlarmOverlay(alertCategory, foundZone, alertDesc, false);
+            isAlarmActive = true;
+        } 
+        else if (!foundZone && isAlarmActive) {
+            // האזעקה הסתיימה או הוסרה מהשרתים - מחזירים לשגרה
+            hideAlarmOverlay();
+            isAlarmActive = false;
+        }
+
+    } catch (error) {
+        // שגיאות רשת זמניות - נרשום לקונסול ונמשיך לניסיון הבא
+        console.log("Oref fetch cycle failed, retrying...");
+    }
+}
+
+function showAlarmOverlay(title, zone, description, isTest) {
+    const banner = document.getElementById('alarm-banner');
+    const mainContent = document.getElementById('main-content');
+    
+    if (!banner) {
+        console.error("Alarm banner element not found!");
+        return;
+    }
+
+    // 1. עדכון הכותרת (סוג ההתראה)
+    const titleElem = document.getElementById('alarm-title');
+    if (titleElem) {
+        titleElem.innerText = title;
+        titleElem.style.fontSize = '5vh'; // גודל קבוע ביחס לסרגל
+    }
+
+    // 2. עדכון שם האזור (דינמי מה-API)
+    const zonesElem = document.getElementById('alarm-zones');
+    if (zonesElem) {
+        zonesElem.innerText = zone;
+        zonesElem.style.fontSize = '3vh'; // גודל קבוע ביחס לסרגל
+    }
+
+    // 3. עדכון התיאור עם לוגיקת פונט דינמי
+    const descElem = document.getElementById('alarm-desc');
+    if (descElem) {
+        descElem.innerText = description;
+        
+        // התאמת גודל פונט לפי אורך הטקסט למניעת חריגה
+        if (description.length > 100) {
+            descElem.style.fontSize = '2.8vh'; 
+        } else if (description.length > 60) {
+            descElem.style.fontSize = '3.5vh';
+        } else {
+            descElem.style.fontSize = '4.2vh';
+        }
+        
+        // הצגה בפורמט Line-clamp (מוגדר ב-CSS/Style ב-HTML)
+        descElem.style.display = description ? '-webkit-box' : 'none';
+    }
+
+    // 4. הצגת תגית "סימולציה" רק אם אכן מדובר בבדיקה
+    const testBadge = document.getElementById('alarm-test-badge');
+    if (testBadge) {
+        testBadge.style.display = isTest ? 'block' : 'none';
+    }
+
+    // 5. הפעלת האנימציה - העלאת הסרגל
+    banner.style.transform = 'translateY(0)';
+
+    // 6. כיווץ תוכן המסך ל-75% (כדי שלא יוסתר ע"י הסרגל)
+    if (mainContent) {
+        mainContent.style.transform = 'scale(0.75)';
+        mainContent.style.transformOrigin = 'top center';
+    }
+}
+
+function hideAlarmOverlay() {
+    const banner = document.getElementById('alarm-banner');
+    if (!banner) return;
+    
+    banner.style.transform = 'translateY(100%)';
+    const mainContent = document.getElementById('main-content');
+    if (mainContent) {
+        mainContent.style.transform = 'scale(1)';
+    }
+}
+
+// התחלת דגימה רציפה כל 3 שניות
+setInterval(fetchOrefAlerts, 3000);
