@@ -69,7 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
         btnTriggerAlarm.addEventListener('click', () => {
             // מפעיל את הפונקציה הגלובלית שנמצאת ב-app.js
             if (typeof showAlarmOverlay === 'function') {
-                showAlarmOverlay('ירי רקטות וטילים', 'מודיעין - מכבים - רעות', 'red', true);
+                showAlarmOverlay('ירי רקטות וטילים', 'מודיעין - מכבים - רעות', 'השוהים במרחב המוגן יכולים לצאת. בעת קבלת הנחיה או התרעה, יש לפעול בהתאם להנחיות פיקוד העורף', true);
             } else {
                 console.error("showAlarmOverlay function not found in app.js");
             }

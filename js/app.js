@@ -565,7 +565,7 @@ init();
 // מערכת התראות פיקוד העורף - סנכרון מלא
 // ==========================================
 
-const ALARM_ZONES = ["מודיעין - מכבים - רעות"];
+const ALARM_ZONES = ["מודיעין - מכבים - רעות", "מודיעין מכבים רעות"];
 const PROXY_URL = "https://oref-proxy.benyair-lior.workers.dev/"; // <--- ודא שהכתובת שלך כאן
 
 let isAlarmActive = false;
@@ -577,53 +577,103 @@ async function fetchOrefAlerts() {
 
         const text = await response.text();
         
-        // בדיקה אם יש בכלל נתונים (קובץ ריק = אין אזעקות בארץ)
+        // בדיקה בסיסית אם יש בכלל נתונים (קובץ ריק או סוגריים ריקים = אין אזעקות)
         const hasData = text && text.trim() !== "" && text.trim() !== "{}";
-        let activeInOurZone = false;
+        
+        let foundZone = "";      // השם שנמצא בפועל ב-API
         let alertCategory = 'התרעת פיקוד העורף';
+        let alertDesc = "";      // תוכן שדה ה-desc (הנחיות)
 
         if (hasData) {
             try {
                 const alertData = JSON.parse(text);
+                
+                // בפיקוד העורף המידע על האזורים נמצא תחת המערך alertData.data
                 if (alertData && alertData.data) {
-                    // בודק אם מודיעין מופיעה ברשימה
-                    activeInOurZone = alertData.data.some(zone => ALARM_ZONES.includes(zone));
-                    alertCategory = alertData.title || alertCategory;
+                    // מחפשים האם אחד מהשמות במערך ה-ALARM_ZONES שלנו קיים בנתוני האמת
+                    const matchedZone = alertData.data.find(zone => ALARM_ZONES.includes(zone));
+                    
+                    if (matchedZone) {
+                        foundZone = matchedZone;           // לוקחים את השם המדויק מה-API
+                        alertCategory = alertData.title || alertCategory;
+                        alertDesc = alertData.desc || "";  // שואבים את ההנחיה (למשל: "היכנסו למרחב המוגן")
+                    }
                 }
             } catch (e) {
-                console.error("JSON Parse Error");
+                console.error("JSON Parse Error in Oref Fetch");
             }
         }
 
-        // לוגיקת הצגה/הסתרה אוטומטית
-        if (activeInOurZone && !isAlarmActive) {
-            // האזעקה התחילה במודיעין - מקפיצים סרגל
-            showAlarmOverlay(alertCategory, ALARM_ZONES[0], 'red', false);
+        // --- לוגיקת הצגה/הסתרה אוטומטית ---
+        
+        if (foundZone && !isAlarmActive) {
+            // התחילה אזעקה חדשה - מציגים את הסרגל
+            showAlarmOverlay(alertCategory, foundZone, alertDesc, false);
             isAlarmActive = true;
         } 
-        else if (!activeInOurZone && isAlarmActive) {
-            // האזעקה הסתיימה או הוסרה משרתי פיקוד העורף - מורידים סרגל
+        else if (!foundZone && isAlarmActive) {
+            // האזעקה הסתיימה או הוסרה מהשרתים - מחזירים לשגרה
             hideAlarmOverlay();
             isAlarmActive = false;
         }
 
     } catch (error) {
-        // במקרה של שגיאת רשת, לא עושים כלום כדי לא להפריע למצגת
-        console.log("Fetch failed, retrying in next cycle...");
+        // שגיאות רשת זמניות - נרשום לקונסול ונמשיך לניסיון הבא
+        console.log("Oref fetch cycle failed, retrying...");
     }
 }
 
-// הפונקציות לתצוגה (ודא שהן קיימות ב-app.js או utils.js)
-function showAlarmOverlay(title, zone, severity, isTest) {
+function showAlarmOverlay(title, zone, description, isTest) {
     const banner = document.getElementById('alarm-banner');
-    if (!banner) return;
-    
-    document.getElementById('alarm-title').innerText = title;
-    document.getElementById('alarm-zones').innerText = zone;
-    document.getElementById('alarm-test-badge').style.display = isTest ? 'block' : 'none';
-    
-    banner.style.transform = 'translateY(0)';
     const mainContent = document.getElementById('main-content');
+    
+    if (!banner) {
+        console.error("Alarm banner element not found!");
+        return;
+    }
+
+    // 1. עדכון הכותרת (סוג ההתראה)
+    const titleElem = document.getElementById('alarm-title');
+    if (titleElem) {
+        titleElem.innerText = title;
+        titleElem.style.fontSize = '5vh'; // גודל קבוע ביחס לסרגל
+    }
+
+    // 2. עדכון שם האזור (דינמי מה-API)
+    const zonesElem = document.getElementById('alarm-zones');
+    if (zonesElem) {
+        zonesElem.innerText = zone;
+        zonesElem.style.fontSize = '3vh'; // גודל קבוע ביחס לסרגל
+    }
+
+    // 3. עדכון התיאור עם לוגיקת פונט דינמי
+    const descElem = document.getElementById('alarm-desc');
+    if (descElem) {
+        descElem.innerText = description;
+        
+        // התאמת גודל פונט לפי אורך הטקסט למניעת חריגה
+        if (description.length > 100) {
+            descElem.style.fontSize = '2.8vh'; 
+        } else if (description.length > 60) {
+            descElem.style.fontSize = '3.5vh';
+        } else {
+            descElem.style.fontSize = '4.2vh';
+        }
+        
+        // הצגה בפורמט Line-clamp (מוגדר ב-CSS/Style ב-HTML)
+        descElem.style.display = description ? '-webkit-box' : 'none';
+    }
+
+    // 4. הצגת תגית "סימולציה" רק אם אכן מדובר בבדיקה
+    const testBadge = document.getElementById('alarm-test-badge');
+    if (testBadge) {
+        testBadge.style.display = isTest ? 'block' : 'none';
+    }
+
+    // 5. הפעלת האנימציה - העלאת הסרגל
+    banner.style.transform = 'translateY(0)';
+
+    // 6. כיווץ תוכן המסך ל-75% (כדי שלא יוסתר ע"י הסרגל)
     if (mainContent) {
         mainContent.style.transform = 'scale(0.75)';
         mainContent.style.transformOrigin = 'top center';
