@@ -571,55 +571,63 @@ const PROXY_URL = "https://oref-proxy.benyair-lior.workers.dev/"; // <--- ודא
 let isAlarmActive = false;
 
 async function fetchOrefAlerts() {
+    const controller = new AbortController();
+    // טיימר פנימי שיקטע את הבקשה אם היא לוקחת יותר מ-5 שניות
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+
     try {
-        const response = await fetch(PROXY_URL);
-        if (!response.ok) return;
+            // הוספת Timestamp ל-URL גורמת לדפדפן לחשוב שזו כתובת חדשה לגמרי בכל פעם
+            const freshUrl = `${PROXY_URL}?t=${Date.now()}`;
+
+            const response = await fetch(freshUrl, { 
+                signal: controller.signal,
+                cache: 'no-store' // זה מספיק בהחלט יחד עם ה-Timestamp
+            });
+        
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+            // בולעים שגיאות HTTP (כמו 500 או 404) וממשיכים
+            console.warn("Proxy returned error status:", response.status);
+            return; 
+        }
 
         const text = await response.text();
         
-        // בדיקה בסיסית אם יש בכלל נתונים (קובץ ריק או סוגריים ריקים = אין אזעקות)
-        const hasData = text && text.trim() !== "" && text.trim() !== "{}";
-        
-        let foundZone = "";      // השם שנמצא בפועל ב-API
-        let alertCategory = 'התרעת פיקוד העורף';
-        let alertDesc = "";      // תוכן שדה ה-desc (הנחיות)
+        // אם השרת החזיר תוכן לא תקין או ריק
+        if (!text || text.trim() === "" || text.trim() === "{}") {
+            if (isAlarmActive) {
+                hideAlarmOverlay();
+                isAlarmActive = false;
+            }
+            return;
+        }
 
-        if (hasData) {
-            try {
-                const alertData = JSON.parse(text);
-                
-                // בפיקוד העורף המידע על האזורים נמצא תחת המערך alertData.data
-                if (alertData && alertData.data) {
-                    // מחפשים האם אחד מהשמות במערך ה-ALARM_ZONES שלנו קיים בנתוני האמת
-                    const matchedZone = alertData.data.find(zone => ALARM_ZONES.includes(zone));
-                    
-                    if (matchedZone) {
-                        foundZone = matchedZone;           // לוקחים את השם המדויק מה-API
-                        alertCategory = alertData.title || alertCategory;
-                        alertDesc = alertData.desc || "";  // שואבים את ההנחיה (למשל: "היכנסו למרחב המוגן")
-                    }
+        // מנסים לפענח את ה-JSON - אם הוא פגום, ה-catch יתפוס את זה
+        const alertData = JSON.parse(text);
+        
+        if (alertData && alertData.data) {
+            const matchedZone = alertData.data.find(zone => ALARM_ZONES.includes(zone));
+            
+            if (matchedZone) {
+                if (!isAlarmActive) {
+                    showAlarmOverlay(alertData.title || 'התרעה', matchedZone, alertData.desc || "", false);
+                    isAlarmActive = true;
                 }
-            } catch (e) {
-                console.error("JSON Parse Error in Oref Fetch");
+            } else if (isAlarmActive) {
+                hideAlarmOverlay();
+                isAlarmActive = false;
             }
         }
-
-        // --- לוגיקת הצגה/הסתרה אוטומטית ---
-        
-        if (foundZone && !isAlarmActive) {
-            // התחילה אזעקה חדשה - מציגים את הסרגל
-            showAlarmOverlay(alertCategory, foundZone, alertDesc, false);
-            isAlarmActive = true;
-        } 
-        else if (!foundZone && isAlarmActive) {
-            // האזעקה הסתיימה או הוסרה מהשרתים - מחזירים לשגרה
-            hideAlarmOverlay();
-            isAlarmActive = false;
-        }
-
     } catch (error) {
-        // שגיאות רשת זמניות - נרשום לקונסול ונמשיך לניסיון הבא
-        console.log("Oref fetch cycle failed, retrying...");
+        // כאן אנחנו "בולעים" את השגיאה
+        // לא משנה אם זה Timeout, אין אינטרנט, או JSON פגום - הקוד לא קורס
+        console.log("Silent skip: Alert check failed due to network or format issue.");
+    } finally {
+        // ה-Finally מבטיח שגם אם הייתה שגיאה וגם אם לא, 
+        // הטיימר ינוקה והבקשה הבאה תצא לדרך בעוד 3 שניות.
+        clearTimeout(timeoutId);
+        setTimeout(fetchOrefAlerts, 3000);
     }
 }
 
@@ -691,5 +699,5 @@ function hideAlarmOverlay() {
     }
 }
 
-// התחלת דגימה רציפה כל 3 שניות
-setInterval(fetchOrefAlerts, 3000);
+// קריאה ראשונה בודדת להנעת התהליך
+fetchOrefAlerts();
