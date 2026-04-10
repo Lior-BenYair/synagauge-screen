@@ -700,4 +700,4 @@ function hideAlarmOverlay() {
 }
 
 // קריאה ראשונה בודדת להנעת התהליך
-fetchOrefAlerts();
+//fetchOrefAlerts();
